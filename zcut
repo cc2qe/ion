@@ -1,0 +1,11 @@
+#!/usr/bin/env python
+
+import argparse
+
+parser=argparse.ArgumentParser(description="cuts and stuff")
+parser.add_argument('-f', metavar='column(s)', type=str, required=True, help='columns you want to cut')
+parser.add_argument('-d', metavar='delimiter', required=False, help='column delimited (defaults to whitespace)')
+
+args=parser.parse_args()
+
+
