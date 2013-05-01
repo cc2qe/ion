@@ -8,9 +8,8 @@ Author: Colby Chiang (cc2qe@virginia.edu)
 Description: Removes duplicate lines that occur consecutively in a file
 
 positional arguments:
-  file\tassumed to be sorted on -k column by default. If not,
-\tplease use the -u flag to specify an unsorted input.
-\t(default is stdin)
+  file\tassumes that duplicate entries in column k are
+\tconsecutive. If not, use the -u flag. (default is stdin)
 
 optional arguments:
   -h\tshow this message and exit

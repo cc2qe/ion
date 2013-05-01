@@ -1,11 +1,19 @@
 #!/usr/bin/env python
 
-import argparse
+import argparse, sys
 
-parser=argparse.ArgumentParser(description="cuts and stuff")
+parser = argparse.ArgumentParser(description="cuts and stuff")
 parser.add_argument('-f', metavar='column(s)', type=str, required=True, help='columns you want to cut')
-parser.add_argument('-d', metavar='delimiter', required=False, help='column delimited (defaults to whitespace)')
+parser.add_argument('-d', metavar='delimiter', required=False, help='column delimiter (defaults: any whitespace)')
+parser.add_argument('-e', metavar='outDelim', required=False, help='output column delimited (default: tab)')
+parser.add_argument('file', nargs='?', type=argparse.FileType('r'), default=sys.stdin, help='file to read. If file is absent or file is \'-\', then read stdin')
 
-args=parser.parse_args()
+args = parser.parse_args()
 
+colString = args.f
+file = args.file
+
+for line in file:
+    v = line.rstrip().split('\t')
+    print colString
 
