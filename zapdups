@@ -9,7 +9,8 @@ Description: Removes duplicate lines that occur consecutively in a file
 
 positional arguments:
   file\tassumed to be sorted on -k column by default. If not,
-\tplease use the -u flag to specify an unsorted input. ('-' for stdin)
+\tplease use the -u flag to specify an unsorted input.
+\t(default is stdin)
 
 optional arguments:
   -h\tshow this message and exit
@@ -33,13 +34,6 @@ do
 	\?) usage;;
     esac
 done
-
-# check that the positional arguments are there
-if [ $(( $# - $OPTIND )) -lt 0 ]
-then
-    usage;
-    exit 1
-fi
 
 # set the last arg as the positional arg for input
 input=${@:$OPTIND:1}
