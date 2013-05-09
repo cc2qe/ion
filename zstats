@@ -1,0 +1,156 @@
+#!/usr/bin/env python
+
+import argparse, sys
+from argparse import RawTextHelpFormatter
+from collections import Counter
+
+__author__ = "Colby Chiang (cc2qe@virginia.edu)"
+__version__ = "0.0.1"
+__date__ = "$Date: 2013-05-09 14:31 $"
+
+# --------------------------------------
+# define functions
+
+def get_args():
+    parser = argparse.ArgumentParser(formatter_class=RawTextHelpFormatter, description="\
+zstats\n\
+author: " + __author__ + "\n\
+version: " + __version__ + "\n\
+description: Calculate basic numeric statistics")
+    parser.add_argument('-a', '--abs', action='store_true', help='take absolute values of input before calculating stats')
+    parser.add_argument('data', nargs='?', type=argparse.FileType('r'), default=None, help='input column of numbers. (default: stdin)')
+
+    # parse the arguments
+    args = parser.parse_args()
+
+    # if no input, check if part of pipe and if so, read stdin.
+    if args.data == None:
+        if sys.stdin.isatty():
+            parser.print_help()
+            exit(1)
+        else:
+            args.data = sys.stdin
+    return args
+
+# get the number of entries in the set
+def countRecords(myCounter):
+    numRecords = sum(myCounter.values())
+    return numRecords
+
+# sum of the entries
+def sumRecords(myCounter):
+    mySum = 0.0
+    for c in myCounter:
+        mySum += c * float(myCounter[c])
+    return mySum
+
+
+# calculate the mean, given a counter and the
+# length of the feature (chromosome or genome)
+def mean(myCounter):
+    # the number of total entries in the set is the
+    # sum of the occurrences for each value
+    numRecords = countRecords(myCounter)
+
+    # u holds the mean
+    u = float
+
+    u = sumRecords(myCounter) / numRecords
+    return u
+
+def stdev(myCounter):
+    # the number of total entries in the set is the
+    # sum of the occurrences for each value
+    numRecords = countRecords(myCounter)
+
+    # u holds the mean
+    u = mean(myCounter)
+    sumVar = 0.0
+
+    # stdev is sqrt(sum((x-u)^2)/#elements)
+    for c in myCounter:
+        sumVar += myCounter[c] * (c - u)**2
+    variance = float(sumVar) / numRecords
+    stdev = variance**(0.5)
+    return stdev
+
+# calculate quartiles or percentiles from the depth counter.
+# percentile(depthCount, 0.5) returns the media
+def percentile(myCounter, q):
+    # perc is percentile value to return
+    perc = float
+    #length is the number of bases we're looking at
+    numEntries = countRecords(myCounter)
+
+    # the number of entries through the set
+    # we've gone
+    b = 0
+
+    # stopping point. Halfway for median, percentile otherwise
+    limit = float(numEntries) * q
+
+    # a list of the values. Sort it from
+    # smallest to largest and start counting to
+    # halfway through the # of entries
+    valueList = list(myCounter)
+    valueList.sort()
+
+    # iterator i
+    i = 0
+    while b <= limit:
+        # if p is exactly halfway, then we must
+        # take the mean of the two surrounding.
+        if b == limit:
+            perc = (valueList[i-1] + valueList[i]) / float(2)
+            return perc
+
+        myValue = valueList[i]
+
+        # myCounter[myValue] is the number of entries
+        # that have myValue
+        b += myCounter[myValue]
+        i += 1
+    perc = valueList[i-1]
+    return perc
+
+# median is simply 50th percentile
+def median(myCounter):
+    return percentile(myCounter, 0.5)
+
+# primary function
+def calcStats(data, absolute):
+    # Each entry in valueCounts is a value, and its count is
+    # the number of instances of that value observed in the dataset.
+    # So valueCount[5] is the number of times 5 has been seen in the data.
+    valueCounts = Counter()
+    
+    for line in data:
+        lineVal = float(line.strip())
+        valueCounts[lineVal] += 1
+    
+    print 'mean ', mean(valueCounts)
+    print 'stdev ', stdev(valueCounts)
+    print 'median ', median(valueCounts)
+    print 'sum ', sumRecords(valueCounts)
+    return
+
+# --------------------------------------
+# main function
+
+def main():
+    # parse the command line args
+    args = get_args()
+
+    # store into global values
+    data = args.data
+    absolute = args.abs
+    
+    # call primary function
+    calcStats(data, absolute)
+    
+    # close the file
+    data.close()
+
+# initialize the script
+if __name__ == '__main__':
+    sys.exit(main())
