@@ -176,8 +176,15 @@ def calcStats(data, absolute):
     
     for line in data:
         lineVal = float(line.strip())
+        
+        # if absolute flag, then absolutize the lineVal
+        if absolute:
+            lineVal = abs(lineVal)
+        
+        # add the lineVal to the counter
         valueCounts[lineVal] += 1
     
+    # print the formatted output.
     print 'num records:\t%s' % countRecords(valueCounts)
     print 'sum:\t\t%s' % sumRecords(valueCounts)
     print 'arith. mean:\t%s' % mean(valueCounts)
