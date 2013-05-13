@@ -13,7 +13,7 @@ positional arguments:
 
 optional arguments:
   -h\tshow this message and exit
-  -u\tinput file is unsorted (uses more memory)
+  -u\tdon't assume duplicates are consecutive (uses more memory)
   -k\tkey column for matches (default: 0, for full line match)"
     exit 1
 }
@@ -29,13 +29,18 @@ do
 	h) usage;;
 	u) unsorted=true;;
 	k) k=$OPTARG;;
-#	i) input=$OPTARG;;
 	\?) usage;;
     esac
 done
 
 # set the last arg as the positional arg for input
 input=${@:$OPTIND:1}
+
+# if no pipe and no input arg, then print usage and exit
+if [[ -t 0 && $input == "" ]]
+then
+    usage
+fi
 
 # if input is unsorted, make an array to store entries
 # that have already been visited, and only print if next
