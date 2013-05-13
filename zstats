@@ -96,6 +96,12 @@ def variance(myCounter):
 # products.
 # geo_mean = exp(arithMean(ln(a_i))
 def geoMean(myCounter):
+    # if there is a zero in the data, then geometric
+    # mean is undefined
+    if 0.0 in list(myCounter):
+        print 'whatup'
+        return 'undef (zero found in data)'
+
     numRecords = countRecords(myCounter)
 
     # counter for the log values
@@ -103,8 +109,10 @@ def geoMean(myCounter):
 
     # store the log counts 
     for c in myCounter:
+        if c < 0:
+            return 'undef (negative number found in data)'
         logCounts[math.log(c)] += myCounter[c]
-    
+            
     # the mean of the log values
     meanLog = mean(logCounts)
 
