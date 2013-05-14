@@ -99,7 +99,6 @@ def geoMean(myCounter):
     # if there is a zero in the data, then geometric
     # mean is undefined
     if 0.0 in list(myCounter):
-        print 'whatup'
         return 'undef (zero found in data)'
 
     numRecords = countRecords(myCounter)
