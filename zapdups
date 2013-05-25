@@ -15,7 +15,7 @@ optional arguments:
   -h\tshow this message and exit
   -k\tkey column for matches (default: 0, for full line match)
   -u\tdon't assume duplicates are consecutive (uses more memory)
-  -v\tonly print duplicates (duplicates must occur consecutively in file"
+  -v\tonly print duplicates (duplicates must occur consecutively in file)"
 
     exit 1
 }
