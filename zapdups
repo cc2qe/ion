@@ -2,7 +2,7 @@
 
 # define usage function
 usage(){
-    echo -e "usage: zapdups [-h] [-u] [-k column] file
+    echo -e "usage: zapdups [-h] [-uv] [-k column] file
 
 Author: Colby Chiang (cc2qe@virginia.edu)
 Description: Removes duplicate lines that occur consecutively in a file
@@ -13,22 +13,26 @@ positional arguments:
 
 optional arguments:
   -h\tshow this message and exit
+  -k\tkey column for matches (default: 0, for full line match)
   -u\tdon't assume duplicates are consecutive (uses more memory)
-  -k\tkey column for matches (default: 0, for full line match)"
+  -v\tonly print duplicates (duplicates must occur consecutively in file"
+
     exit 1
 }
 
 # set default values
 k=0
 unsorted=false
+inverse=false
 
 # process command line args
-while getopts huk: opt
+while getopts huk:v opt
 do
     case "$opt" in
 	h) usage;;
 	u) unsorted=true;;
 	k) k=$OPTARG;;
+	v) inverse=true;;
 	\?) usage;;
     esac
 done
@@ -47,12 +51,23 @@ fi
 # entry is not in the array
 if $unsorted
 then
-    awk -F, "!_[\$${k}]++" FS="\t" $input
+    if $inverse
+    then
+	echo -e "error: duplicates must occur consecutively for -v option"
+	usage
+    else
+	awk -F, "!_[\$${k}]++" FS="\t" $input
+    fi
 
 # if input file is sorted, only check the previous entry
 # for a match
 else
-    awk "{if (\$${k}!=PREV) print \$0; PREV=\$${k}}" $input
+    if $inverse
+    then
+	awk "BEGIN { FIRSTMATCH=0 } { if (\$${k}==PREVK) { if (FIRSTMATCH) { print \$PREVLINE; FIRSTMATCH=0 } print \$0; } else FIRSTMATCH=1; PREVK=\$${k}; PREVLINE=\$0 }" $input
+    else
+	awk "{if (\$${k}!=PREV) print \$0; PREV=\$${k}}" $input
+    fi
 fi
 
 # exit cleanly
