@@ -200,7 +200,7 @@ def calcStats(data, absolute):
     print 'q1:\t\t%s' % percentile(valueCounts, 0.25)
     print 'q3:\t\t%s' % percentile(valueCounts, 0.75)
     print '2.5%%:\t\t%s' % percentile(valueCounts, 0.025)
-    print '97.5%%\t\t%s' % percentile(valueCounts, 0.975)
+    print '97.5%%:\t\t%s' % percentile(valueCounts, 0.975)
     print 'min:\t\t%s' % minimum(valueCounts)
     print 'max:\t\t%s' % maximum(valueCounts)
     print 'mode:\t\t%s (N=%s)' % mode(valueCounts)
