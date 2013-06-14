@@ -4,13 +4,13 @@
 usage(){
     echo -e "usage: zapdups [-h] [-uv] [-k column] file
 
-Author: Colby Chiang (cc2qe@virginia.edu)
-Description: Removes duplicate lines from a file without reordering
+zapdups 0.0.1
+author: Colby Chiang (cc2qe@virginia.edu)
+description: Removes duplicate lines from a file without reordering
 
 positional arguments:
-  file\tdefault behavior assumes that duplicate entries in
-\tcolumn k are consecutive. If not, use the -u flag.
-\t(default is stdin)
+  file\tdefault behavior assumes that duplicate entries
+\tare consecutive. If not, use the -u flag. (default is stdin)
 
 optional arguments:
   -h\tshow this message and exit
