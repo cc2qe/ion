@@ -5,11 +5,12 @@ usage(){
     echo -e "usage: zapdups [-h] [-uv] [-k column] file
 
 Author: Colby Chiang (cc2qe@virginia.edu)
-Description: Removes duplicate lines that occur consecutively in a file
+Description: Removes duplicate lines from a file without reordering
 
 positional arguments:
-  file\tassumes that duplicate entries in column k are
-\tconsecutive. If not, use the -u flag. (default is stdin)
+  file\tdefault behavior assumes that duplicate entries in
+\tcolumn k are consecutive. If not, use the -u flag.
+\t(default is stdin)
 
 optional arguments:
   -h\tshow this message and exit
@@ -53,7 +54,7 @@ if $unsorted
 then
     if $inverse
     then
-	echo -e "error: duplicates must occur consecutively for -v option"
+	echo -e "\nERROR: duplicates must occur consecutively to use -v option\n"
 	usage
     else
 	awk -F, "!_[\$${k}]++" FS="\t" $input
