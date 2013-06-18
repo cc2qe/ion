@@ -14,9 +14,8 @@ __date__ = "$Date: 2013-05-09 14:31 $"
 
 def get_args():
     parser = argparse.ArgumentParser(formatter_class=RawTextHelpFormatter, description="\
-zstats\n\
+zstats " + __version__ + "\n\
 author: " + __author__ + "\n\
-version: " + __version__ + "\n\
 description: Calculate basic numeric statistics")
     parser.add_argument('-a', '--abs', action='store_true', help='take absolute values of input before calculating stats')
     parser.add_argument('data', nargs='?', type=argparse.FileType('r'), default=None, help='input column of numbers. (default: stdin)')
