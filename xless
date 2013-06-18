@@ -1,0 +1,54 @@
+#!/bin/bash
+
+############################################################
+#  Program: xless
+#  Author : Colby Chiang (cc2qe@virginia.edu)
+############################################################
+
+
+## BEGIN SCRIPT
+usage()
+{
+    cat << EOF
+
+usage: $0 OPTIONS
+
+author: Colby Chiang
+description: Pipe alias of less that automatically displays
+  xz and gzipped files
+
+OPTIONS can be:
+    -h      Show this message
+
+EOF
+}
+
+# Show usage when there are no arguments.
+if test -z "$1"
+then
+    usage
+    exit
+fi
+
+FILENAME=$1
+
+# Check options passed in.
+while getopts "h" OPTION
+do
+    case $OPTION in
+        h)
+            usage
+            exit 1
+            ;;
+        ?)
+            usage
+            exit
+            ;;
+    esac
+done
+
+# Do something with the arguments...
+gzip -cdfq $FILENAME | xz -cdfq | less
+
+
+## END SCRIPT
