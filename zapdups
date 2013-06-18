@@ -56,8 +56,10 @@ then
     then
 	echo -e "\nERROR: duplicates must occur consecutively to use -v option\n"
 	usage
+
+	#awk "!_[\$${k}]++ ; print \$0" FS="\t" $input
     else
-	awk -F, "!_[\$${k}]++" FS="\t" $input
+	awk -F "\t" "!_[\$${k}]++" $input
     fi
 
 # if input file is sorted, only check the previous entry
@@ -65,7 +67,7 @@ then
 else
     if $inverse
     then
-	awk "BEGIN { FIRSTMATCH=0 } { if (\$${k}==PREVK) { if (FIRSTMATCH) { print PREVLINE ; FIRSTMATCH=0 } print \$0; } else FIRSTMATCH=1; PREVK=\$${k}; PREVLINE=\$0 }" $input
+	awk "BEGIN { FIRSTMATCH=0 } { if (\$${k}==PREVK) { if (FIRSTMATCH) { print PREVLINE; FIRSTMATCH=0 } print \$0; } else FIRSTMATCH=1; PREVK=\$${k}; PREVLINE=\$0 }" $input
     else
 	awk "{if (\$${k}!=PREV) print \$0; PREV=\$${k}}" $input
     fi
