@@ -65,7 +65,7 @@ then
 else
     if $inverse
     then
-	awk "BEGIN { FIRSTMATCH=0 } { if (\$${k}==PREVK) { if (FIRSTMATCH) { print \$PREVLINE; FIRSTMATCH=0 } print \$0; } else FIRSTMATCH=1; PREVK=\$${k}; PREVLINE=\$0 }" $input
+	awk "BEGIN { FIRSTMATCH=0 } { if (\$${k}==PREVK) { if (FIRSTMATCH) { print PREVLINE ; FIRSTMATCH=0 } print \$0; } else FIRSTMATCH=1; PREVK=\$${k}; PREVLINE=\$0 }" $input
     else
 	awk "{if (\$${k}!=PREV) print \$0; PREV=\$${k}}" $input
     fi
