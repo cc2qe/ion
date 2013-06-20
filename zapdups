@@ -2,23 +2,22 @@
 
 # define usage function
 usage(){
-    echo -e "usage: zapdups [-h] [-uv] [-d delimiter] [-k column] file
+    echo "usage: zapdups [-h] [-uv] [-d delimiter] [-k column] file
 
-zapdups 0.0.1
+zapdups 0.0.2
 author: Colby Chiang (cc2qe@virginia.edu)
 description: Removes duplicate lines from a file without reordering
 
 positional arguments:
-  file\tdefault behavior assumes that duplicate entries
-\tare consecutive. If not, use the -u flag. (default is stdin)
+  file  default behavior assumes that duplicate entries are consecutive.
+          If not, use the -u flag. (default is stdin)
 
 optional arguments:
-  -h\tshow this message and exit
-  -k\tkey column for matches (default: 0, for full line match)
-  -d\tinput file delimiter (currently <tab> no matter what you put, sucka)
-  -u\tdon't assume duplicates are consecutive (uses more memory)
-  -v\tonly print duplicates (duplicates must occur consecutively in file)"
-
+  -h    show this message and exit
+  -k    key column for matches (default: 0, for full line match)
+  -d    input file delimiter (default: \t)
+  -u    don't assume duplicates are consecutive (uses more memory)
+  -v    only print duplicates (cannot be combined with -u flag)"
     exit 1
 }
 
@@ -59,14 +58,8 @@ then
     then
 	echo -e "\nERROR: duplicates must occur consecutively to use -v option\n"
 	usage
-
-	#awk "!_[\$${k}]++ ; print \$0" FS="\t" $input
     else
-<<<<<<< HEAD
-	awk "!_[\$${k}]++" FS="\t" OFS="\t" $input
-=======
-	awk -F "\t" "!_[\$${k}]++" $input
->>>>>>> 11f50e48b44d7287eb940daef9806f1ed3e133b8
+	awk "!array[\$${k}]++" FS="$delim" OFS="\$delim" $input
     fi
 
 # if input file is sorted, only check the previous entry
@@ -74,13 +67,9 @@ then
 else
     if $inverse
     then
-<<<<<<< HEAD
-	awk "BEGIN { FIRSTMATCH=0 } { if (\$${k}==PREVK) { if (FIRSTMATCH) { print \$PREVLINE; FIRSTMATCH=0 } print \$0; } else FIRSTMATCH=1; PREVK=\$${k}; PREVLINE=\$0 }" FS="\t" OFS="\t" $input
-=======
-	awk "BEGIN { FIRSTMATCH=0 } { if (\$${k}==PREVK) { if (FIRSTMATCH) { print PREVLINE; FIRSTMATCH=0 } print \$0; } else FIRSTMATCH=1; PREVK=\$${k}; PREVLINE=\$0 }" $input
->>>>>>> 11f50e48b44d7287eb940daef9806f1ed3e133b8
+	awk "BEGIN { FIRSTMATCH=0 } { if (\$${k}==PREVK) { if (FIRSTMATCH) { print PREVLINE; FIRSTMATCH=0 } print \$0; } else FIRSTMATCH=1; PREVK=\$${k}; PREVLINE=\$0 }" FS=$delim OFS=$delim $input
     else
-	awk "{if (\$${k}!=PREV) print \$0; PREV=\$${k}}" FS="\t" OFS="\t" $input
+	awk "{if (\$${k}!=PREV) print \$0; PREV=\$${k}}" FS=$delim OFS=$delim $input
     fi
 fi
 
