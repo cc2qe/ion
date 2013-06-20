@@ -56,10 +56,10 @@ if $unsorted
 then
     if $inverse
     then
-	echo -e "\nERROR: duplicates must occur consecutively to use -v option\n"
+	echo -e "\nERROR: -v option cannot be combined with -u option\n"
 	usage
     else
-	awk "!array[\$${k}]++" FS="$delim" OFS="\$delim" $input
+	awk "!array[\$${k}]++" FS=$delim OFS=$delim $input
     fi
 
 # if input file is sorted, only check the previous entry
