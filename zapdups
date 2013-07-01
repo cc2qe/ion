@@ -15,10 +15,31 @@ positional arguments:
 optional arguments:
   -h    show this message and exit
   -k    key column for matches (default: 0, for full line match)
+          ex: -k 1,4-7,10,12-15,8
   -d    input file delimiter (default: \t)
   -u    don't assume duplicates are consecutive (uses more memory)
   -v    only print duplicates (cannot be combined with -u flag)"
     exit 1
+}
+
+# parse the k string. -k
+parsek() {
+    k_arr=$(echo $1 | tr "," "\n")
+    
+    parsed_k=
+    for key in ${k_arr}
+    do
+	if [[ $key == *-* ]]
+	then
+	    range=$(echo $key | tr "-" "\n")
+	    for i in $(seq ${range[0]} ${range[1]})
+	    do
+		parsed_k+=\$${i}\"${delim}\"
+	    done
+	else
+	    parsed_k+=\$${key}\"${delim}\"
+	fi
+    done
 }
 
 # set default values
@@ -49,6 +70,9 @@ then
     usage
 fi
 
+# convert the k value to something awk can use (if it has commas)
+parsek $k
+
 # if input is unsorted, make an array to store entries
 # that have already been visited, and only print if next
 # entry is not in the array
@@ -59,7 +83,7 @@ then
 	echo -e "\nERROR: -v option cannot be combined with -u option\n"
 	usage
     else
-	awk "!array[\$${k}]++" FS=$delim OFS=$delim $input
+	awk "!array[${parsed_k}]++" FS=$delim OFS=$delim $input
     fi
 
 # if input file is sorted, only check the previous entry
@@ -67,9 +91,9 @@ then
 else
     if $inverse
     then
-	awk "BEGIN { FIRSTMATCH=0 } { if (\$${k}==PREVK) { if (FIRSTMATCH) { print PREVLINE; FIRSTMATCH=0 } print \$0; } else FIRSTMATCH=1; PREVK=\$${k}; PREVLINE=\$0 }" FS=$delim OFS=$delim $input
+	awk "BEGIN { FIRSTMATCH=0 } { if (${parsed_k}==PREVK) { if (FIRSTMATCH) { print PREVLINE; FIRSTMATCH=0 } print \$0; } else FIRSTMATCH=1; PREVK=${parsed_k}; PREVLINE=\$0 }" FS=$delim OFS=$delim $input
     else
-	awk "{if (\$${k}!=PREV) print \$0; PREV=\$${k}}" FS=$delim OFS=$delim $input
+	awk "{if (${parsed_k}!=PREV) print \$0; PREV=${parsed_k}}" FS=$delim OFS=$delim $input
     fi
 fi
 
