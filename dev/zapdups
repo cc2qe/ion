@@ -15,7 +15,7 @@ positional arguments:
 optional arguments:
   -h    show this message and exit
   -k    key column for matches (default: 0, for full line match)
-          ex: -k 1,4-7,10,12-15,8
+          ex:  -k 2; -k 8,2,4,5; -k 4-7; -k 1,4-7,10,12-15,8
   -d    input file delimiter (default: \t)
   -u    don't assume duplicates are consecutive (uses more memory)
   -v    only print duplicates (cannot be combined with -u flag)"
