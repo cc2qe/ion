@@ -73,9 +73,9 @@ fi
 # convert the k value to something awk can use (if it has commas)
 parsek $k
 
-# if input is unsorted, make an array to store entries
-# that have already been visited, and only print if next
-# entry is not in the array
+# if input is unsorted, add each new element to array of visited
+# elements, and add 1 to the array's value. If an element is not
+# yet in the array, it's value will be 0 and it will be printed.
 if $unsorted
 then
     if $inverse
