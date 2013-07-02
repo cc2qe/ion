@@ -119,7 +119,7 @@ def geoMean(myCounter):
 
 
 # calculate quartiles or percentiles from the depth counter.
-# percentile(depthCount, 0.5) returns the media
+# percentile(depthCount, 0.5) returns the median
 def percentile(myCounter, q):
     # perc is percentile value to return
     perc = float
