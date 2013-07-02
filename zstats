@@ -48,6 +48,8 @@ def sumRecords(myCounter):
 
 # calculate the arithmetic mean, given a counter and the
 # length of the feature (chromosome or genome)
+# for x percentile, x% of the elements in the set are
+# <= the output value
 def mean(myCounter):
     # the number of total entries in the set is the
     # sum of the occurrences for each value
