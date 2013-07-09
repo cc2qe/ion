@@ -51,20 +51,27 @@ do
 done
 
 # check that the positional arguments are there
-if [ $(( $# - $OPTIND )) -lt 0 ]
+if [ $(( $# - $OPTIND )) -lt 1 ]
 then
     usage;
     exit 1
 fi
 
 # set the last arg as the positional arg for input
-awkString=${@:$OPTIND:1}
+FILE=${@: - 1}
+#FILE=$(( $# - 1 ))
 
 # Do something with the arguments...
 
-echo $awkString
+awkString=$1
 
+#echo $awkString
+#echo $@
 
-`echo awk \'{ $awkString } \'`
+echo "FILE is $FILE"
+
+OFS="\t"
+
+awk "BEGIN {OFS=\"$OFS\"} { $awkString }" $FILE
 
 ## END SCRIPT
