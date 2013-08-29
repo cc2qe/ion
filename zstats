@@ -18,7 +18,7 @@ zstats " + __version__ + "\n\
 author: " + __author__ + "\n\
 description: Calculate basic numeric statistics")
     parser.add_argument('-a', '--abs', action='store_true', help='take absolute values of input before calculating stats')
-    parser.add_argument('-p', '--ptile', type=str, default=None, help='comma separated list of percentiles to display (default: 2.5,25,50,75,97.5)')
+    parser.add_argument('-q', '--quantile', type=str, default=None, help='comma separated list of quantiles to display (default: 0.025,0.25,0.5,0.75,0.975)')
     parser.add_argument('data', nargs='?', type=argparse.FileType('r'), default=None, help='input column of numbers. (default: stdin)')
 
     # parse the arguments
@@ -120,11 +120,11 @@ def geoMean(myCounter):
     return math.exp(meanLog)
 
 
-# calculate quartiles or percentiles from the depth counter.
-# percentile(depthCount, 0.5) returns the median
-def percentile(myCounter, q):
-    # perc is percentile value to return
-    perc = float
+# calculate quantiles from the depth counter.
+# quantile(depthCount, 0.5) returns the median
+def quantile(myCounter, q):
+    # quant is percentile value to return
+    quant = float
     #length is the number of bases we're looking at
     numEntries = countRecords(myCounter)
 
@@ -147,8 +147,8 @@ def percentile(myCounter, q):
         # if p is exactly halfway, then we must
         # take the mean of the two surrounding.
         if b == limit:
-            perc = (valueList[i-1] + valueList[i]) / float(2)
-            return perc
+            quant = (valueList[i-1] + valueList[i]) / float(2)
+            return quant
 
         myValue = valueList[i]
 
@@ -156,12 +156,12 @@ def percentile(myCounter, q):
         # that have myValue
         b += myCounter[myValue]
         i += 1
-    perc = valueList[i-1]
-    return perc
+    quant = valueList[i-1]
+    return quant
 
 # median is simply 50th percentile
 def median(myCounter):
-    return percentile(myCounter, 0.5)
+    return quantile(myCounter, 0.5)
 
 def mode(myCounter):
     return myCounter.most_common()[0]
@@ -177,7 +177,7 @@ def maximum(myCounter):
     
 
 # primary function
-def calcStats(data, absolute, ptile):
+def calcStats(data, absolute, qTile):
     # Each entry in valueCounts is a value, and its count is
     # the number of instances of that value observed in the dataset.
     # So valueCount[5] is the number of times 5 has been seen in the data.
@@ -199,17 +199,17 @@ def calcStats(data, absolute, ptile):
     print 'arith. mean:\t%s' % mean(valueCounts)
     print 'geo. mean:\t%s' % geoMean(valueCounts)
     print 'median:\t\t%s' % median(valueCounts)
-    print 'q1:\t\t%s' % percentile(valueCounts, 0.25)
-    print 'q3:\t\t%s' % percentile(valueCounts, 0.75)
-    print '2.5%%:\t\t%s' % percentile(valueCounts, 0.025)
-    print '97.5%%:\t\t%s' % percentile(valueCounts, 0.975)
-    if ptile:
-        for myPtile in ptile.split(','):
-            pfloat = float(myPtile)/100
+    print '0.25 quantile:\t%s' % quantile(valueCounts, 0.25)
+    print '0.75 quantile:\t%s' % quantile(valueCounts, 0.75)
+    print '0.025 quantile:\t%s' % quantile(valueCounts, 0.025)
+    print '0.975 quantile:\t%s' % quantile(valueCounts, 0.975)
+    if qTile:
+        for myQtile in qTile.split(','):
+            pfloat = float(myQtile)
             if pfloat >= 1 or pfloat < 0:
-                print "Error: percentile %s is not between 0 and 100" % myPtile
+                print "Error: quantile %s is not between 0 and 1" % myQtile
                 exit(1)
-            print '%s%%:\t\t%s' % (myPtile, percentile(valueCounts, pfloat))
+            print '%s quantile:\t%s' % (myQtile, quantile(valueCounts, pfloat))
     print 'min:\t\t%s' % minimum(valueCounts)
     print 'max:\t\t%s' % maximum(valueCounts)
     print 'mode:\t\t%s (N=%s)' % mode(valueCounts)
@@ -229,10 +229,10 @@ def main():
     # store into global values
     data = args.data
     absolute = args.abs
-    ptile = args.ptile
+    qTile = args.quantile
     
     # call primary function
-    calcStats(data, absolute, ptile)
+    calcStats(data, absolute, qTile)
     
     # close the file
     data.close()
