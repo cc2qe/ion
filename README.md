@@ -1,4 +1,4 @@
 ion
 ===
 
-File streaming and text handling tools
+File streaming, text handling, and arithmetic tools
