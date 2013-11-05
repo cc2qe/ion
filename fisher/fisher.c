@@ -64,7 +64,7 @@ int usage()
 int main (int argc, char **argv)
 {
   // input control
-  if (argc < 5) {
+  if (argc != 5) {
     return usage();
   }
 
