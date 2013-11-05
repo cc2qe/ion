@@ -63,6 +63,11 @@ int usage()
 
 int main (int argc, char **argv)
 {
+  // input control
+  if (argc < 5) {
+    return usage();
+  }
+
   // parse the optional arguments
   int i;
   while ((i = getopt(argc, argv, "h")) != -1) {
@@ -78,10 +83,6 @@ int main (int argc, char **argv)
   int c = atoi(argv[3]);
   int d = atoi(argv[4]);
   
-  if (argc < 5) {
-    return usage();
-  }
-
   // the hypergeometric probability (the probability of observing your table,
   // given the row and column sums.
   printf("%e\n", fisher(a, b, c, d));
