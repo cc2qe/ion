@@ -109,7 +109,7 @@ int main (int argc, char **argv)
   printf("sensitivity (true pos rate): %f\n", true_pos_rate);
   printf("specificity (true neg rate): %f\n", true_neg_rate);
   printf("type I error (false pos rate): %f\n", false_pos_rate);
-  printf("type II error (false_neg_rage): %f\n", false_neg_rate);
+  printf("type II error (false neg rage): %f\n", false_neg_rate);
   
 
   //printf("%e\n", fisher(a, b, c, d));
