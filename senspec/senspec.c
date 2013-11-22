@@ -95,12 +95,14 @@ int main (int argc, char **argv)
   double true_neg_rate;// (specificity)
   double false_pos_rate; // (type I error, alpha)
   double false_neg_rate; // (type II error, beta)
+  double false_disc_rate;
 
   // calculate the outputs
   true_pos_rate = TP / (TP + FN);
   true_neg_rate= TN / (FP + TN);
   false_pos_rate = 1 - true_neg_rate;
   false_neg_rate = 1 - true_pos_rate;
+  false_disc_rate = FP / (FP + TP);
 
   printf("a: %f, b: %f, c %f, d %f\n", TP, FP, FN, TN);
 
@@ -109,7 +111,8 @@ int main (int argc, char **argv)
   printf("sensitivity (true pos rate): %f\n", true_pos_rate);
   printf("specificity (true neg rate): %f\n", true_neg_rate);
   printf("type I error (false pos rate): %f\n", false_pos_rate);
-  printf("type II error (false neg rage): %f\n", false_neg_rate);
+  printf("type II error (false neg rate): %f\n", false_neg_rate);
+  printf("false discovery rate: %f\n", false_disc_rate);
   
 
   //printf("%e\n", fisher(a, b, c, d));
