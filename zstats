@@ -18,7 +18,7 @@ zstats " + __version__ + "\n\
 author: " + __author__ + "\n\
 description: Calculate basic numeric statistics")
     parser.add_argument('-a', '--abs', action='store_true', help='take absolute values of input before calculating stats')
-    parser.add_argument('-q', '--quantile', type=str, default=None, help='comma separated list of quantiles to display (default: 0.025,0.25,0.5,0.75,0.975)')
+    parser.add_argument('-p', '--percentile', type=str, default=None, help='comma separated list of percentiles to display (default: 2.5,25,50,75,97.5)')
     parser.add_argument('data', nargs='?', type=argparse.FileType('r'), default=None, help='input column of numbers. (default: stdin)')
 
     # parse the arguments
@@ -132,7 +132,7 @@ def quantile(myCounter, q):
     # we've gone
     b = 0
 
-    # stopping point. Halfway for median, percentile otherwise
+    # stopping point. Halfway for median, quantile otherwise
     limit = float(numEntries) * q
 
     # a list of the values. Sort it from
@@ -177,7 +177,7 @@ def maximum(myCounter):
     
 
 # primary function
-def calcStats(data, absolute, qTile):
+def calcStats(data, absolute, pTile):
     # Each entry in valueCounts is a value, and its count is
     # the number of instances of that value observed in the dataset.
     # So valueCount[5] is the number of times 5 has been seen in the data.
@@ -198,18 +198,18 @@ def calcStats(data, absolute, qTile):
     print 'sum:\t\t%s' % sumRecords(valueCounts)
     print 'arith. mean:\t%s' % mean(valueCounts)
     print 'geo. mean:\t%s' % geoMean(valueCounts)
+    print '2.5 %%tile:\t%s' % quantile(valueCounts, 0.025)
+    print 'Q1:\t\t%s' % quantile(valueCounts, 0.25)
     print 'median:\t\t%s' % median(valueCounts)
-    print '0.25 quantile:\t%s' % quantile(valueCounts, 0.25)
-    print '0.75 quantile:\t%s' % quantile(valueCounts, 0.75)
-    print '0.025 quantile:\t%s' % quantile(valueCounts, 0.025)
-    print '0.975 quantile:\t%s' % quantile(valueCounts, 0.975)
-    if qTile:
-        for myQtile in qTile.split(','):
-            pfloat = float(myQtile)
-            if pfloat >= 1 or pfloat < 0:
-                print "Error: quantile %s is not between 0 and 1" % myQtile
-                exit(1)
-            print '%s quantile:\t%s' % (myQtile, quantile(valueCounts, pfloat))
+    print 'Q3:\t\t%s' % quantile(valueCounts, 0.75)
+    print '97.5 %%tile:\t%s' % quantile(valueCounts, 0.975)
+    if pTile:
+        for myPtile in pTile.split(','):
+            pfloat = float(myPtile)
+            if pfloat >= 100 or pfloat < 0:
+                print "Error: percentile %s is not between 0 and 100" % myPtile
+                continue
+            print '%s %%tile:\t%s' % (myPtile, quantile(valueCounts, pfloat/100))
     print 'min:\t\t%s' % minimum(valueCounts)
     print 'max:\t\t%s' % maximum(valueCounts)
     print 'mode:\t\t%s (N=%s)' % mode(valueCounts)
@@ -229,10 +229,10 @@ def main():
     # store into global values
     data = args.data
     absolute = args.abs
-    qTile = args.quantile
+    pTile = args.percentile
     
     # call primary function
-    calcStats(data, absolute, qTile)
+    calcStats(data, absolute, pTile)
     
     # close the file
     data.close()
