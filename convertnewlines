@@ -2,9 +2,9 @@
 
 # define usage function
 usage(){
-    echo "usage: convertlines [-h]
+    echo "usage: convertnewlines [-h]
 
-convertlines 0.0.1
+convertnewlines 0.0.1
 author: Colby Chiang (cc2qe@virginia.edu)
 description: Convert microsoft line endings to Unix (reads from stdin)
 
