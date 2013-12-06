@@ -1,0 +1,35 @@
+#!/bin/bash
+
+# define usage function
+usage(){
+    echo "usage: convertlines [-h]
+
+convertlines 0.0.1
+author: Colby Chiang (cc2qe@virginia.edu)
+description: Convert microsoft line endings to Unix (reads from stdin)
+
+optional arguments:
+  -h    show this message and exit"
+    exit 1
+}
+
+# process command line args
+while getopts h opt
+do
+    case "$opt" in
+	h) usage;;
+	\?) usage;;
+    esac
+done
+
+# if no pipe then print usage and exit
+if [[ -t 0 ]]
+then
+    usage
+fi
+
+# convert the line endings
+tr '\015' '\n'
+
+# exit cleanly
+exit 0
