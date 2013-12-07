@@ -6,8 +6,8 @@ from collections import Counter
 import math
 
 __author__ = "Colby Chiang (cc2qe@virginia.edu)"
-__version__ = "0.0.1"
-__date__ = "$Date: 2013-05-09 14:31 $"
+__version__ = "0.0.2"
+__date__ = "$Date: 2013-12-07 14:31 $"
 
 # --------------------------------------
 # define functions
@@ -18,7 +18,7 @@ zstats " + __version__ + "\n\
 author: " + __author__ + "\n\
 description: Calculate basic numeric statistics")
     parser.add_argument('-a', '--abs', action='store_true', help='take absolute values of input before calculating stats')
-    parser.add_argument('-p', '--percentile', type=str, default=None, help='comma separated list of percentiles to display (default: 2.5,25,50,75,97.5)')
+    parser.add_argument('-p', '--percentile', type=str, default=None, help='comma separated list of percentiles to display (default: 5,25,50,75,95)')
     parser.add_argument('data', nargs='?', type=argparse.FileType('r'), default=None, help='input column of numbers. (default: stdin)')
 
     # parse the arguments
@@ -44,7 +44,6 @@ def sumRecords(myCounter):
     for c in myCounter:
         mySum += c * float(myCounter[c])
     return mySum
-
 
 # calculate the arithmetic mean, given a counter and the
 # length of the feature (chromosome or genome)
@@ -92,7 +91,7 @@ def variance(myCounter):
     myVariance = float(sumVar) / numRecords
     return myVariance
 
-# the geometrice mean is the nth root of the product
+# the geometric mean is the nth root of the product
 # of n values. Here we'll use a logrithmic representation
 # so we don't have to deal with rounding error from large
 # products.
@@ -120,35 +119,32 @@ def geoMean(myCounter):
     return math.exp(meanLog)
 
 
-# calculate quantiles from the depth counter.
-# quantile(depthCount, 0.5) returns the median
-def quantile(myCounter, q):
-    # quant is percentile value to return
-    quant = float
+# calculate percentiles from the depth counter.
+def percentile(myCounter, p):
+    p = float(p)
+
     #length is the number of bases we're looking at
     numEntries = countRecords(myCounter)
+
+    # the ordinal value of the output element
+    limit = int(round(p/100 * numEntries + 0.5))
+
+    # a list of the values, sorted smallest to largest
+    # note that this list contains unique elements only
+    valueList = list(myCounter)
+    valueList.sort()
+    numValues = len(valueList)
 
     # the number of entries through the set
     # we've gone
     b = 0
 
-    # stopping point. Halfway for median, quantile otherwise
-    limit = float(numEntries) * q
-
-    # a list of the values. Sort it from
-    # smallest to largest and start counting to
-    # halfway through the # of entries
-    valueList = list(myCounter)
-    valueList.sort()
-
     # iterator i
     i = 0
-    while b <= limit:
-        # if p is exactly halfway, then we must
-        # take the mean of the two surrounding.
-        if b == limit:
-            quant = (valueList[i-1] + valueList[i]) / float(2)
-            return quant
+    while b < limit:
+        # if i is greater than numValues, just return the largest
+        if i == (numValues - 1):
+            break
 
         myValue = valueList[i]
 
@@ -156,13 +152,83 @@ def quantile(myCounter, q):
         # that have myValue
         b += myCounter[myValue]
         i += 1
-    quant = valueList[i-1]
-    return quant
 
-# median is simply 50th percentile
+    v = valueList[i]
+    return v
+
+# median is approx 50th percentile, except when it is between
+# two values in which case it's the mean of them.
 def median(myCounter):
-    return quantile(myCounter, 0.5)
+    #length is the number of bases we're looking at
+    numEntries = countRecords(myCounter)
 
+    # the ordinal value of the middle element
+    limit = int(0.5 * numEntries)
+
+    # a list of the values, sorted smallest to largest
+    # note that this list contains unique elements only
+    valueList = list(myCounter)
+    valueList.sort()
+    numValues = len(valueList)
+
+    # the number of entries through the set
+    # we've gone
+    b = 0
+
+    # iterator i
+    i = 0
+    while b <= limit:
+        # if i is greater than numValues, just return the largest
+        if i == (numValues - 1):
+            v = valueList[i]
+            break
+
+        # get the value at that ordinal value
+        myValue = valueList[i]
+
+
+        if b == limit:
+
+            # if there are an odd number of entries, then just return this value          
+            if numEntries % 2:
+                v = valueList[i]
+            # else there are an even number of entries. So take the average of
+            # the bth value and the one above it.
+            else:
+                # check whether this value is unique or not.
+                if myCounter[myValue] == 1:
+                    v = (valueList[i] + valueList[i+1]) / 2.0
+                # if the limit is on the rightmost edge of a valueList
+                elif limit == prev_b + b:
+                    v = (valueList[i] + valueList[i+1]) / 2.0
+                else:
+                    v = valueList[i]
+
+        # store the previous value of b in case the next value is the median
+        prev_b = b
+        # myCounter[myValue] is the number of entries
+        # that have myValue
+        b += myCounter[myValue]
+        i += 1
+
+    return v
+
+
+
+    # length is the number of bases we're looking at
+    numEntries = countRecords(myCounter)
+    
+    # a list of the values, sorted smallest to largest
+    valueList = list(myCounter)
+    valueList.sort()
+
+    if numEntries % 2:
+        m = valueList[int(0.5 * numEntries - 0.5)]
+    else:
+        leftIdx = int(0.5 * numEntries)
+        m = (valueList[leftIdx - 1] + valueList[leftIdx]) / 2.0
+    return m
+    
 def mode(myCounter):
     return myCounter.most_common()[0]
 
@@ -198,19 +264,20 @@ def calcStats(data, absolute, pTile):
     print 'sum:\t\t%s' % sumRecords(valueCounts)
     print 'arith. mean:\t%s' % mean(valueCounts)
     print 'geo. mean:\t%s' % geoMean(valueCounts)
-    print '2.5 %%tile:\t%s' % quantile(valueCounts, 0.025)
-    print 'Q1:\t\t%s' % quantile(valueCounts, 0.25)
     print 'median:\t\t%s' % median(valueCounts)
-    print 'Q3:\t\t%s' % quantile(valueCounts, 0.75)
-    print '97.5 %%tile:\t%s' % quantile(valueCounts, 0.975)
+    print 'min:\t\t%s' % minimum(valueCounts)
+    print '5 %%tile:\t%s' % percentile(valueCounts, 5)
+    print 'Q1:\t\t%s' % percentile(valueCounts, 25)
+    print 'Q2:\t\t%s' % percentile(valueCounts, 50)
+    print 'Q3:\t\t%s' % percentile(valueCounts, 75)
+    print '95 %%tile:\t%s' % percentile(valueCounts, 95)
     if pTile:
         for myPtile in pTile.split(','):
             pfloat = float(myPtile)
             if pfloat >= 100 or pfloat < 0:
                 print "Error: percentile %s is not between 0 and 100" % myPtile
                 continue
-            print '%s %%tile:\t%s' % (myPtile, quantile(valueCounts, pfloat/100))
-    print 'min:\t\t%s' % minimum(valueCounts)
+            print '%s %%tile:\t%s' % (myPtile, percentile(valueCounts, pfloat))
     print 'max:\t\t%s' % maximum(valueCounts)
     print 'mode:\t\t%s (N=%s)' % mode(valueCounts)
     print 'anti-mode:\t%s (N=%s)' % antimode(valueCounts)
