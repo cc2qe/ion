@@ -6,7 +6,7 @@
 int usage()
 {
   fprintf(stderr,
-	  "usage: senspec [options] <TP> <TN> <FP> <FN>\n\n"
+	  "usage: senspec [options] <TP> <FP> <FN> <TN>\n\n"
           "author: Colby Chiang (cc2qe@virginia.edu)\n"
           "description: Calculates classification performance\n"
           "  for a 2x2 contingency table.\n"
