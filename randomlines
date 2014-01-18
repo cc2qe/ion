@@ -43,10 +43,9 @@ if seed != None:
 else:
     random.seed()
 
-lines_to_get = random.sample(range(num_lines), num_lines_wanted)
-lines_to_get.sort()
+lines_to_get = set(random.sample(xrange(num_lines), num_lines_wanted))
 
-for current_line_num in range(num_lines):
+for current_line_num in xrange(num_lines):
     if current_line_num in lines_to_get:
         print f.readline().rstrip()
     else:
