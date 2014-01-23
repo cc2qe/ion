@@ -18,7 +18,7 @@ zstats " + __version__ + "\n\
 author: " + __author__ + "\n\
 description: Calculate basic numeric statistics")
     parser.add_argument('-a', '--abs', action='store_true', help='take absolute values of input before calculating stats')
-    parser.add_argument('-p', '--percentile', type=str, default=None, help='comma separated list of percentiles to display (default: 5,25,50,75,95)')
+    parser.add_argument('-p', '--percentile', type=str, default=None, help='comma separated list of percentiles to display')
     parser.add_argument('data', nargs='?', type=argparse.FileType('r'), default=None, help='input column of numbers. (default: stdin)')
 
     # parse the arguments
@@ -120,12 +120,14 @@ def geoMean(myCounter):
 
 
 # calculate percentiles from the depth counter.
+# uses the Nearest Rank definition of percentile
 def percentile(myCounter, p):
     p = float(p)
-
+    if p <= 0 or p >= 100:
+        return
+    
     #length is the number of bases we're looking at
     numEntries = countRecords(myCounter)
-
     # the ordinal value of the output element
     limit = int(round(p/100 * numEntries + 0.5))
 
@@ -135,26 +137,24 @@ def percentile(myCounter, p):
     valueList.sort()
     numValues = len(valueList)
 
-    # the number of entries through the set
-    # we've gone
-    b = 0
-
+    # the number of entries through the set we've gone
+    runEntries = 0
     # iterator i
     i = 0
-    while b < limit:
+    # initiate v, in case one element in input
+    v = valueList [i]
+
+    # move through the value list, iterating by number of
+    # entries for each value
+    while runEntries < limit:
+        v = valueList[i]
+        runEntries += myCounter[v]
+        i += 1
         # if i is greater than numValues, just return the largest
         if i == (numValues - 1):
             break
-
-        myValue = valueList[i]
-
-        # myCounter[myValue] is the number of entries
-        # that have myValue
-        b += myCounter[myValue]
-        i += 1
-
-    v = valueList[i]
-    return v
+    else:
+        return v
 
 # median is approx 50th percentile, except when it is between
 # two values in which case it's the mean of them.
@@ -163,71 +163,31 @@ def median(myCounter):
     numEntries = countRecords(myCounter)
 
     # the ordinal value of the middle element
-    limit = int(0.5 * numEntries)
+    # if 2 middle elements, then non-integer
+    limit = 0.5 * numEntries
 
     # a list of the values, sorted smallest to largest
     # note that this list contains unique elements only
     valueList = list(myCounter)
     valueList.sort()
-    numValues = len(valueList)
 
-    # the number of entries through the set
-    # we've gone
-    b = 0
-
-    # iterator i
+    # number of entries we've gone through
+    runEntries = 0
+    # index of the current value in valueList
     i = 0
-    while b <= limit:
-        # if i is greater than numValues, just return the largest
-        if i == (numValues - 1):
-            v = valueList[i]
-            break
+    # initiate v, in case list only has one element
+    v = valueList[i]
 
-        # get the value at that ordinal value
-        myValue = valueList[i]
-
-
-        if b == limit:
-
-            # if there are an odd number of entries, then just return this value          
-            if numEntries % 2:
-                v = valueList[i]
-            # else there are an even number of entries. So take the average of
-            # the bth value and the one above it.
-            else:
-                # check whether this value is unique or not.
-                if myCounter[myValue] == 1:
-                    v = (valueList[i] + valueList[i+1]) / 2.0
-                # if the limit is on the rightmost edge of a valueList
-                elif limit == prev_b + b:
-                    v = (valueList[i] + valueList[i+1]) / 2.0
-                else:
-                    v = valueList[i]
-
-        # store the previous value of b in case the next value is the median
-        prev_b = b
-        # myCounter[myValue] is the number of entries
-        # that have myValue
-        b += myCounter[myValue]
+    # move through the value list, iterating by number of
+    # entries for each value
+    while runEntries < limit:
+        v = valueList[i]
+        runEntries += myCounter[v]
         i += 1
-
-    return v
-
-
-
-    # length is the number of bases we're looking at
-    numEntries = countRecords(myCounter)
-    
-    # a list of the values, sorted smallest to largest
-    valueList = list(myCounter)
-    valueList.sort()
-
-    if numEntries % 2:
-        m = valueList[int(0.5 * numEntries - 0.5)]
+    if runEntries == limit:
+        return (v + valueList[i]) / 2.0
     else:
-        leftIdx = int(0.5 * numEntries)
-        m = (valueList[leftIdx - 1] + valueList[leftIdx]) / 2.0
-    return m
+        return v
     
 def mode(myCounter):
     return myCounter.most_common()[0]
@@ -240,7 +200,6 @@ def minimum(myCounter):
 
 def maximum(myCounter):
     return max(list(myCounter))
-    
 
 # primary function
 def calcStats(data, absolute, pTile):
@@ -264,21 +223,15 @@ def calcStats(data, absolute, pTile):
     print 'sum:\t\t%s' % sumRecords(valueCounts)
     print 'arith. mean:\t%s' % mean(valueCounts)
     print 'geo. mean:\t%s' % geoMean(valueCounts)
-    print 'median:\t\t%s' % median(valueCounts)
     print 'min:\t\t%s' % minimum(valueCounts)
-    print '5 %%tile:\t%s' % percentile(valueCounts, 5)
     print 'Q1:\t\t%s' % percentile(valueCounts, 25)
-    print 'Q2:\t\t%s' % percentile(valueCounts, 50)
+    print 'median:\t\t%s' % median(valueCounts)
     print 'Q3:\t\t%s' % percentile(valueCounts, 75)
-    print '95 %%tile:\t%s' % percentile(valueCounts, 95)
+    print 'max:\t\t%s' % maximum(valueCounts)
     if pTile:
         for myPtile in pTile.split(','):
             pfloat = float(myPtile)
-            if pfloat >= 100 or pfloat < 0:
-                print "Error: percentile %s is not between 0 and 100" % myPtile
-                continue
             print '%s %%tile:\t%s' % (myPtile, percentile(valueCounts, pfloat))
-    print 'max:\t\t%s' % maximum(valueCounts)
     print 'mode:\t\t%s (N=%s)' % mode(valueCounts)
     print 'anti-mode:\t%s (N=%s)' % antimode(valueCounts)
     print 'stdev:\t\t%s' % stdev(valueCounts)
