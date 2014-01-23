@@ -151,10 +151,10 @@ def percentile(myCounter, p):
         runEntries += myCounter[v]
         i += 1
         # if i is greater than numValues, just return the largest
-        if i == (numValues - 1):
+        if i == (numValues):
+            v = valueList[i - 1]
             break
-    else:
-        return v
+    return v
 
 # median is approx 50th percentile, except when it is between
 # two values in which case it's the mean of them.
