@@ -14,7 +14,7 @@ __date__ = "$Date: 2014-01-31 19:31 $"
 
 def get_args():
     parser = argparse.ArgumentParser(formatter_class=RawTextHelpFormatter, description="\
-rollingstats.py\n\
+rollingstats\n\
 author: " + __author__ + "\n\
 version: " + __version__ + "\n\
 description: Calculate statistics on a numeric data column within a rolling window")
