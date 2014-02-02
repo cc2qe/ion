@@ -136,10 +136,7 @@ def rollingStats(f, col, window, stype, endrule, align):
         for l in line_buffer[shift+1:]:
             print '\t'.join(l + [fill])
     elif endrule == 'calc':
-        # print col_buffer
-        # print line_buffer
-        for i in xrange(window - shift - 1): # the shift if the other direction
-        #for l in line_buffer[(shift - window + 1):]:
+        for i in xrange(window - shift - 1): # the shift in the other direction
             l = line_buffer[shift - window + i + 1]
             col_summary = summarize(col_buffer[-window:], stype)
             print '\t'.join(map(str, l + [col_summary]) )
