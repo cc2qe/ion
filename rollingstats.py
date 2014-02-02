@@ -3,6 +3,7 @@
 import argparse, sys
 from argparse import RawTextHelpFormatter
 import numpy as np
+from scipy import stats
 
 __author__ = "Colby Chiang (cc2qe@virginia.edu)"
 __version__ = "$Revision: 0.0.1 $"
@@ -17,95 +18,125 @@ rollingstats.py\n\
 author: " + __author__ + "\n\
 version: " + __version__ + "\n\
 description: Calculate statistics on a numeric data column within a rolling window")
-    #parser.add_argument('-a', '--argA', metavar='argA', type=str, required=True, help='description of argument')
-    #parser.add_argument('-b', '--argB', metavar='argB', required=False, help='description of argument B')
-    #parser.add_argument('-e', '--endrule', required=False, default='keep', choices=['keep', 'omit', 'constant', 'mean', 'median', 'min', 'max'], help='behavior at begining and end of the set.\n\'keep\' retains original values,\n\'omit\' drops them from the output\n\'constant\' copies the first and last informative values\n(default: keep)')
-    parser.add_argument('-a', '--align', required=False, default='center', choices=['left', 'center', 'right'], help='alignment of the index with respect to the rolling window (default: center)')
-    parser.add_argument('-e', '--endrule', required=False, default='constant', choices=['keep', 'omit', 'constant'], help='behavior at begining and end of the set.\n\'keep\' retains original values,\n\'omit\' drops them from the output\n\'constant\' copies the first and last informative values\n(default: constant)')
-    parser.add_argument('-t', '--type', required=False, default='mean', choices=['mean', 'median', 'min', 'max'], help='type of rolling summary (default: mean)')
-    parser.add_argument('-w', '--window', required=False, type=int, default=11, help='window size. must be odd. (default: 11)')
+    parser.add_argument('-w', '--window', required=True, type=int, help='window size. must be odd. (required)')
     parser.add_argument('-c', '--col', required=False, type=int, default=1, help='column to assess (default: 1)')
-    parser.add_argument('input', nargs='?', type=argparse.FileType('r'), default=None, help='file to read. If \'-\' or absent then defaults to stdin.')
+    parser.add_argument('-t', '--type', required=False, default='mean', choices=['mean', 'median', 'mode', 'sum', 'min', 'max'], help='type of rolling summary (default: mean)')
+    parser.add_argument('-a', '--align', required=False, default='center', choices=['left', 'center', 'right'], help='alignment of the index with respect to the rolling window (default: center)')
+    parser.add_argument('-e', '--endrule', required=False, default='constant', choices=['constant', 'keep', 'calc', 'fill'], help='behavior at beginning and end of the file.\n\'constant\' copies the first and last informative summary values\n\'keep\' retains original input values,\n\'calc\' calculates summary values from smaller windows\n\'fill\' fills summary values with \"NA\"\n(default: constant)')
+    #parser.add_argument('-f', '--fill', required=False, default='NA', type=str, help='if --endrule is \'fill\', the string used to fill (default: NA)')
+    parser.add_argument('file', nargs='?', type=argparse.FileType('r'), default=None, help='file to read. If \'-\' or absent then defaults to stdin.')
 
     # parse the arguments
     args = parser.parse_args()
 
     # if no input, check if part of pipe and if so, read stdin.
-    if args.input == None:
+    if args.file == None:
         if sys.stdin.isatty():
             parser.print_help()
             exit(1)
         else:
-            args.input = sys.stdin
+            args.file = sys.stdin
     
-    if not args.window % 2:
-        print '\n# Error: window size must be odd integer #\n'
+    if args.window % 2 == 0:
         parser.print_help()
+        print 'Input error: window size must be odd integer'
         exit(1)
 
     # send back the user input
     return args
 
+def summarize(vals, stype):
+    if stype == 'mean':
+        summary = np.mean(vals)
+    elif stype == 'median':
+        summary = np.median(vals)
+    elif stype == 'mode':
+        summary = stats.mode(vals)[0][0]
+    elif stype == 'sum':
+        summary = sum(vals)
+    elif stype == 'max':
+        summary = max(vals)
+    elif stype == 'min':
+        summary = min(vals)
+    return summary
+
 # primary function
 def rollingStats(f, col, window, stype, endrule, align):
+    fill = 'NA'
     c = col - 1
-    col_buffer = []
     counter = 0
+    # buffer for column to summarize
+    col_buffer = []
+    # buffer to hold the full lines until we can write them
+    line_buffer = []
 
-    if align == 'right':
-        offset = 0
-    elif align == 'left':
-        offset = window - 1
+    # the amount that the col buffer is ahead of the line buffer
+    if align == 'left':
+        shift = 0
+    elif align == 'right':
+        shift = window - 1
     elif align == 'center':
-        pass
+        shift = window / 2
 
-    # if endrule constant, then make a buffer
-    # to hold the full lines until we can write them
+    # spool up the buffer before doing anything
+    for i in xrange(window):
+        v  = f.readline().rstrip().split('\t')
+        line_buffer.append(v)
+        col_buffer.append(float(v[c]))
+
+    # endrule behavior at beginning of file
     if endrule == 'constant':
-        line_buffer = []
-        
-    for line in f:
+        for l in line_buffer[:shift]:
+            col_summary = summarize(col_buffer[:window], stype)
+            print '\t'.join(map(str, l + [col_summary]) )
+    elif endrule == 'keep':
+        for l in line_buffer[:shift]:
+            col_summary = float(l[c])
+            print '\t'.join(map(str, l + [col_summary]) )
+    elif endrule == 'fill':
+        for l in line_buffer[:shift]:
+            print '\t'.join(l + [fill])
+    elif endrule == 'calc':
+        for i in xrange(shift):
+            l = line_buffer[i]
+            col_summary = summarize(col_buffer[:i+1], stype)
+            print '\t'.join(map(str, l + [col_summary]) )
+
+    # behavior in body of file
+    while 1:
+        # get col_summary at the end for each window
+        col_summary = summarize(col_buffer[:window], stype)
+        # write the line with the col replaced by the col summary
+        l = line_buffer[shift]
+        print '\t'.join(map(str, l + [col_summary]) )
+
+        # pop first element off the buffers and add the next line
+        line_buffer.pop(0)
+        col_buffer.pop(0)
+        line = f.readline()
+        if line == '':
+            break
         v = line.rstrip().split('\t')
         col_buffer.append(float(v[c]))
-        counter += 1
+        line_buffer.append(v)
 
-        # get col_summary at the end of each window
-        if counter == window - offset:
-            if stype == 'mean':
-                col_summary = np.mean(col_buffer)
-            elif stype == 'median':
-                col_summary = np.median(col_buffer)
-            elif stype == 'max':
-                col_summary = max(col_buffer)
-            elif stype == 'min':
-                col_summary = min(col_buffer)
-            # write the end buffer if it exists
-            if endrule == 'constant' and len(line_buffer):
-                for l in line_buffer:
-                    print '\t'.join(map(str, l[:c] + [col_summary] + l[c+1:] ) )
-                line_buffer = []
-            # write the line with the modified column
-            print '\t'.join(map(str, v[:c] + [col_summary] + v[c+1:] ) )
-            col_buffer.pop(0)
-            counter -= 1
-        # if counter is less than window size,
-        # then we must be at either beginning or end of the data.
-        # behavior based on endrule
-        elif counter < window - offset:
-            if endrule == 'keep':
-                print line.rstrip()
-            elif endrule == 'omit':
-                continue
-            elif endrule == 'constant':
-                line_buffer.append(v)
-        # if counter is larger than window then something is horribly wrong
-        elif counter > window - offset:
-            print 'Error: buffer should never be greater than window'
-            exit(1)
-    # once done with the for loop, write the end buffer if endrule constant
+    # endrule behavior at end of file
     if endrule == 'constant':
-        pass
-
+        for l in line_buffer[shift:]:
+            col_summary = summarize(col_buffer[:window], stype)
+            print '\t'.join(map(str, l + [col_summary]) )
+    elif endrule == 'keep':
+        for l in line_buffer[shift:]:
+            col_summary = float(l[c])
+            print '\t'.join(map(str, l + [col_summary]) )
+    elif endrule == 'fill':
+        for l in line_buffer[shift:]:
+            print '\t'.join(l + [fill])
+    elif endrule == 'calc':
+        for i in xrange(window - shift - 1):
+            l = line_buffer[shift + i]
+            col_summary = summarize(col_buffer[shift + i:], stype)
+            print '\t'.join(map(str, l + [col_summary]) )
     return
 
 # --------------------------------------
@@ -116,10 +147,10 @@ def main():
     args = get_args()
 
     # call primary function
-    rollingStats(args.input, args.col, args.window, args.type, args.endrule, args.align)
+    rollingStats(args.file, args.col, args.window, args.type, args.endrule, args.align)
 
     # close the input file
-    args.input.close()
+    args.file.close()
 
 # initialize the script
 if __name__ == '__main__':
