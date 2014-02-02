@@ -219,7 +219,8 @@ def calcStats(data, absolute, pTile):
         valueCounts[lineVal] += 1
     
     # print the formatted output.
-    print 'num records:\t%s' % countRecords(valueCounts)
+    print 'num lines:\t%s' % countRecords(valueCounts)
+    print 'num unique:\t%s' % len(valueCounts)
     print 'sum:\t\t%s' % sumRecords(valueCounts)
     print 'arith. mean:\t%s' % mean(valueCounts)
     print 'geo. mean:\t%s' % geoMean(valueCounts)
