@@ -20,7 +20,8 @@ version: " + __version__ + "\n\
 description: Calculate statistics on a numeric data column within a rolling window")
     parser.add_argument('-w', '--window', required=True, type=int, help='window size. must be odd. (required)')
     parser.add_argument('-c', '--col', required=False, type=int, default=1, help='column to assess (default: 1)')
-    parser.add_argument('-s', '--summary', required=False, default='mean', choices=['mean', 'median', 'mode', 'sum', 'min', 'max'], help='type of rolling summary (default: mean)')
+    parser.add_argument('-s', '--summary', required=False, default='mean', choices=['mean', 'median', 'mode', 'sum', 'min', 'max', 'count'], help='type of rolling summary (default: mean)')
+    parser.add_argument('-t', '--countstring', required=False, default=None, type=float, help='string to count the instances of within the rolling window. required when --summary is \'count\'')
     parser.add_argument('-a', '--align', required=False, default='center', choices=['left', 'center', 'right'], help='alignment of the index with respect to the rolling window (default: center)')
     parser.add_argument('-e', '--endrule', required=False, default='constant', choices=['constant', 'keep', 'calc', 'fill'], help='behavior at beginning and end of the file.\n\'constant\' copies the first and last informative summary values\n\'keep\' retains original input values,\n\'calc\' calculates summary values from smaller windows\n\'fill\' fills summary values with \"NA\"\n(default: constant)')
     #parser.add_argument('-f', '--fill', required=False, default='NA', type=str, help='if --endrule is \'fill\', the string used to fill (default: NA)')
@@ -42,10 +43,15 @@ description: Calculate statistics on a numeric data column within a rolling wind
         print 'Input error: window size must be odd integer'
         exit(1)
 
+    if args.summary == 'count' and args.countstring==None:
+        parser.print_help()
+        print 'Input error: --countstring required when --summary is \'count\''
+        exit(1)
+
     # send back the user input
     return args
 
-def summarize(vals, stype):
+def summarize(vals, stype, countstring):
     if stype == 'mean':
         summary = np.mean(vals)
     elif stype == 'median':
@@ -58,10 +64,12 @@ def summarize(vals, stype):
         summary = max(vals)
     elif stype == 'min':
         summary = min(vals)
+    elif stype == 'count':
+        summary = vals.count(countstring)
     return summary
 
 # primary function
-def rollingStats(f, col, window, stype, endrule, align):
+def rollingStats(f, col, window, stype, endrule, align, countstring):
     fill = 'NA'
     c = col - 1
     counter = 0
@@ -87,7 +95,7 @@ def rollingStats(f, col, window, stype, endrule, align):
     # endrule behavior at beginning of file
     if endrule == 'constant':
         for l in line_buffer[:shift]:
-            col_summary = summarize(col_buffer[:window], stype)
+            col_summary = summarize(col_buffer[:window], stype, countstring)
             print '\t'.join(map(str, l + [col_summary]) )
     elif endrule == 'keep':
         for l in line_buffer[:shift]:
@@ -105,7 +113,7 @@ def rollingStats(f, col, window, stype, endrule, align):
     # behavior in body of file
     while 1:
         # get col_summary at the end for each window
-        col_summary = summarize(col_buffer[:window], stype)
+        col_summary = summarize(col_buffer[:window], stype, countstring)
         # write the line with the col replaced by the col summary
         l = line_buffer[shift]
         print '\t'.join(map(str, l + [col_summary]) )
@@ -126,7 +134,7 @@ def rollingStats(f, col, window, stype, endrule, align):
         # so start at line_buffer[shift+1:]
         for l in line_buffer[shift+1:]:
             #print col_buffer
-            col_summary = summarize(col_buffer[-window:], stype)
+            col_summary = summarize(col_buffer[-window:], stype, countstring)
             print '\t'.join(map(str, l + [col_summary]) )
     elif endrule == 'keep':
         for l in line_buffer[shift+1:]:
@@ -138,7 +146,7 @@ def rollingStats(f, col, window, stype, endrule, align):
     elif endrule == 'calc':
         for i in xrange(window - shift - 1): # the shift in the other direction
             l = line_buffer[shift - window + i + 1]
-            col_summary = summarize(col_buffer[-window:], stype)
+            col_summary = summarize(col_buffer[-window:], stype, countstring)
             print '\t'.join(map(str, l + [col_summary]) )
     return
 
@@ -150,7 +158,7 @@ def main():
     args = get_args()
 
     # call primary function
-    rollingStats(args.file, args.col, args.window, args.summary, args.endrule, args.align)
+    rollingStats(args.file, args.col, args.window, args.summary, args.endrule, args.align, args.countstring)
 
     # close the input file
     args.file.close()
