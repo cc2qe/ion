@@ -1,0 +1,9 @@
+#!/usr/bin/perl
+
+# code by Ryan Layer (https://github.com/ryanlayer/tools)
+my $in;
+while (my $i = shift) {
+      $in = $in . " " . $i;
+}
+
+print eval($in) . "\n";
