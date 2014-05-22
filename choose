@@ -4,19 +4,19 @@ import argparse, sys
 from argparse import RawTextHelpFormatter
 import math
 
-__author__ = "Author (email@site.com)"
+__author__ = "Colby Chiang (cc2qe@virginia.edu)"
 __version__ = "$Revision: 0.0.1 $"
-__date__ = "$Date: 2013-05-09 14:31 $"
+__date__ = "$Date: 2014-05-22 09:13 $"
 
 # --------------------------------------
 # define functions
 
 def get_args():
     parser = argparse.ArgumentParser(formatter_class=RawTextHelpFormatter, description="\
-pythonTemplate.py\n\
+choose\n\
 author: " + __author__ + "\n\
 version: " + __version__ + "\n\
-description: Basic python script template")
+description: n choose k combination")
     parser.add_argument('n', type=int, help='choose from n items')
     parser.add_argument('k', type=int, help='choose k items from n with replacement')
     parser.add_argument('-l', '--log', action='store_true', help='report log10 of value')
