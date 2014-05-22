@@ -28,8 +28,11 @@ description: n choose k combination")
     return args
 
 def log_choose(n, k, log):
-    r = 0.0
+    if k > n:
+        print "Error: k cannot be greater than n"
+        exit(1)
 
+    r = 0.0
     # swap for efficiency if k is more than half of n
     if k * 2 > n:
         k = n - k
@@ -53,8 +56,6 @@ def main():
 
     # call primary function
     print log_choose(args.n, args.k, args.log)
-
-
 
 # initialize the script
 if __name__ == '__main__':
