@@ -189,6 +189,7 @@ def median(myCounter):
     else:
         return v
 
+# calculate median absolute deviation
 def mad(myCounter, myMedian):
     residCounter = Counter()
     for x in myCounter:
