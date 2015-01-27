@@ -188,7 +188,13 @@ def median(myCounter):
         return (v + valueList[i]) / 2.0
     else:
         return v
-    
+
+def mad(myCounter, myMedian):
+    residCounter = Counter()
+    for x in myCounter:
+        residCounter[abs(x - myMedian)] += myCounter[x]
+    return median(residCounter)
+
 def mode(myCounter):
     return myCounter.most_common()[0]
 
@@ -219,6 +225,7 @@ def calcStats(data, absolute, pTile):
         valueCounts[lineVal] += 1
     
     # print the formatted output.
+    med = median(valueCounts)
     print 'num lines:\t%s' % countRecords(valueCounts)
     print 'num unique:\t%s' % len(valueCounts)
     print 'sum:\t\t%s' % sumRecords(valueCounts)
@@ -226,7 +233,7 @@ def calcStats(data, absolute, pTile):
     print 'geo. mean:\t%s' % geoMean(valueCounts)
     print 'min:\t\t%s' % minimum(valueCounts)
     print 'Q1:\t\t%s' % percentile(valueCounts, 25)
-    print 'median:\t\t%s' % median(valueCounts)
+    print 'median:\t\t%s' % med
     print 'Q3:\t\t%s' % percentile(valueCounts, 75)
     print 'max:\t\t%s' % maximum(valueCounts)
     if pTile:
@@ -237,6 +244,7 @@ def calcStats(data, absolute, pTile):
     print 'anti-mode:\t%s (N=%s)' % antimode(valueCounts)
     print 'stdev:\t\t%s' % stdev(valueCounts)
     print 'variance:\t%s' % variance(valueCounts)
+    print 'mad:\t\t%s' % mad(valueCounts, med)
 
     return
 
