@@ -18,7 +18,9 @@ optional arguments:
           ex:  -k 2; -k 8,2,4,5; -k 4-7; -k 1,4-7,10,12-15,8
   -d    input file delimiter (default: \t)
   -u    don't assume duplicates are consecutive (uses more memory)
-  -v    only print duplicates (cannot be combined with -u flag)"
+  -v    only print duplicates (cannot be combined with -u flag)
+  -z    also omit the first appearance of a block of duplicates
+          (cannot be combined with -u flag)"
     exit 1
 }
 
@@ -47,9 +49,10 @@ k=0
 delim="\t"
 unsorted=false
 inverse=false
+omit_first=false
 
 # process command line args
-while getopts huk:d:v opt
+while getopts huk:d:vz opt
 do
     case "$opt" in
 	h) usage;;
@@ -57,6 +60,7 @@ do
 	k) k=$OPTARG;;
 	d) delim=$OPTARG;;
 	v) inverse=true;;
+	z) omit_first=true;;
 	\?) usage;;
     esac
 done
@@ -82,16 +86,26 @@ then
     then
 	echo -e "\nERROR: -v option cannot be combined with -u option\n"
 	usage
+    elif $omit_first
+    then
+	echo -e "\nERROR: -z option cannot be combined with -u option\n"
+	usage
     else
 	awk "!array[${parsed_k}]++" FS=$delim OFS=$delim $input
     fi
 
-# if input file is sorted, only check the previous entry
-# for a match
 else
+    # if input file is sorted, only check the previous entry
+    # for a match
     if $inverse
     then
-	awk "BEGIN { FIRSTMATCH=0 } { if (${parsed_k}==PREVK) { if (FIRSTMATCH) { print PREVLINE; FIRSTMATCH=0 } print \$0; } else FIRSTMATCH=1; PREVK=${parsed_k}; PREVLINE=\$0 }" FS=$delim OFS=$delim $input
+	awk "BEGIN { MATCH=0 } { if (${parsed_k}==PREVK) { if (MATCH) { print PREVLINE; MATCH=0 } print \$0; } else MATCH=1; PREVK=${parsed_k}; PREVLINE=\$0 }" FS=$delim OFS=$delim $input
+    # if omit_first, then don't print the first match in a block
+    # of duplicates
+    elif $omit_first
+    then
+	awk "BEGIN { MATCHABOVE=0 } { if (${parsed_k}==PREVK) { MATCHABOVE=1; } else { if (! MATCHABOVE) { if (NR>1) print PREVLINE } MATCHABOVE=0;} PREVK=${parsed_k}; PREVLINE=\$0; }" FS=$delim OFS=$delim $input
+    # otherwise, default behavior
     else
 	awk "{if (${parsed_k}!=PREV) print \$0; PREV=${parsed_k}}" FS=$delim OFS=$delim $input
     fi
