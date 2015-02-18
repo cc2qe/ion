@@ -4,7 +4,7 @@
 usage(){
     echo "usage: zapdups [-h] [-uv] [-d delimiter] [-k column] file
 
-zapdups 0.0.2
+zapdups 0.0.3
 author: Colby Chiang (cc2qe@virginia.edu)
 description: Removes duplicate lines from a file without reordering
 
