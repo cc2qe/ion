@@ -216,7 +216,11 @@ def calcStats(data, absolute, pTile):
     valueCounts = Counter()
     
     for line in data:
-        lineVal = float(line.strip())
+        try:
+            lineVal = float(line.strip())
+        except ValueError:
+            sys.stderr.write("\nError: non-numeric input\n%s\n\n" % line.strip())
+            exit(1)
         
         # if absolute flag, then absolutize the lineVal
         if absolute:
