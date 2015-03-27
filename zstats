@@ -216,6 +216,9 @@ def calcStats(data, absolute, pTile):
     valueCounts = Counter()
     
     for line in data:
+        # skip empty lines
+        if line.strip() == "":
+            continue
         try:
             lineVal = float(line.strip())
         except ValueError:
