@@ -91,7 +91,7 @@ then
 	echo -e "\nERROR: -z option cannot be combined with -u option\n"
 	usage
     else
-	awk "!array[${parsed_k}]++" FS=$delim OFS=$delim $input
+	awk "!array[${parsed_k}]++" FS="$delim" OFS="$delim" $input
     fi
 
 else
@@ -99,15 +99,15 @@ else
     # for a match
     if $inverse
     then
-	awk "BEGIN { MATCH=0 } { if (${parsed_k}==PREVK) { if (MATCH) { print PREVLINE; MATCH=0 } print \$0; } else MATCH=1; PREVK=${parsed_k}; PREVLINE=\$0 }" FS=$delim OFS=$delim $input
+	awk "BEGIN { MATCH=0 } { if (${parsed_k}==PREVK) { if (MATCH) { print PREVLINE; MATCH=0 } print \$0; } else MATCH=1; PREVK=${parsed_k}; PREVLINE=\$0 }" FS="$delim" OFS="$delim" $input
     # if omit_first, then don't print the first match in a block
     # of duplicates
     elif $omit_first
     then
-	awk "BEGIN { MATCHABOVE=0 } { if (${parsed_k}==PREVK) { MATCHABOVE=1; } else { if (! MATCHABOVE) { if (NR>1) print PREVLINE } MATCHABOVE=0;} PREVK=${parsed_k}; PREVLINE=\$0; }" FS=$delim OFS=$delim $input
+	awk "BEGIN { MATCHABOVE=0 } { if (${parsed_k}==PREVK) { MATCHABOVE=1; } else { if (! MATCHABOVE) { if (NR>1) print PREVLINE } MATCHABOVE=0;} PREVK=${parsed_k}; PREVLINE=\$0; }" FS="$delim" OFS="$delim" $input
     # otherwise, default behavior
     else
-	awk "{if (${parsed_k}!=PREV) print \$0; PREV=${parsed_k}}" FS=$delim OFS=$delim $input
+	awk "{if (${parsed_k}!=PREV) print \$0; PREV=${parsed_k}}" FS="$delim" OFS="$delim" $input
     fi
 fi
 
