@@ -40,7 +40,7 @@ description: Grep for a string within the column headers and only print those co
 def colGrep(s, delim, rowLabs, colLabs, infile):
     # search for the match string columns
     matchCols = list()
-    header_v = infile.readline().split(delim)
+    header_v = infile.readline().rstrip().split(delim)
     for i in range(len(header_v)):
         if s in header_v[i]:
             matchCols.append(i)
