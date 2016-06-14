@@ -29,7 +29,7 @@ then
 fi
 
 # convert the line endings
-tr '\015' '\n'
+tr -d '\r'
 
 # exit cleanly
 exit 0
