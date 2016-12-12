@@ -1,0 +1,87 @@
+#!/usr/bin/env python
+
+import argparse, sys
+from argparse import RawTextHelpFormatter
+import math
+# import numpy
+from scipy import stats
+
+__author__ = "Colby Chiang (colbychiang@wustl.edu)"
+__version__ = "0.0.1"
+__date__ = "$Date: 2016-12-02 09:31 $"
+
+# --------------------------------------
+# define functions
+
+def get_args():
+    parser = argparse.ArgumentParser(formatter_class=RawTextHelpFormatter, description="\
+znorm " + __version__ + "\n\
+author: " + __author__ + "\n\
+description: convert a column of numbers to z-scores")
+    parser.add_argument('-a', '--abs', action='store_true', help='take absolute values of input before calculating stats')
+    parser.add_argument('-c', '--column', type=int, required=False, default=1, help='column to operate on [1]')
+    parser.add_argument('data', nargs='?', type=argparse.FileType('r'), default=None, help='input column of numbers. (default: stdin)')
+
+    # parse the arguments
+    args = parser.parse_args()
+
+    # if no input, check if part of pipe and if so, read stdin.
+    if args.data == None:
+        if sys.stdin.isatty():
+            parser.print_help()
+            exit(1)
+        else:
+            args.data = sys.stdin
+    return args
+
+# primary function
+def znorm(data, column, absolute):
+    valueList = []
+    line_list = []
+
+    for line in data:
+        l = line.rstrip()
+
+        # skip empty lines
+        if l == "":
+            continue
+        line_list.append(l)
+
+        v = l.split('\t')
+
+        try:
+            lineVal = float(v[column-1])
+        except ValueError:
+            sys.stderr.write("\nError: non-numeric input\n%s\n\n" % line.strip())
+            exit(1)
+        
+        # if absolute flag, then absolutize the lineVal
+        if absolute:
+            lineVal = abs(lineVal)
+        
+        # add the lineVal to the counter
+        valueList.append(lineVal)
+
+    z = stats.zscore(valueList)
+
+    for i in xrange(len(z)):
+        print '\t'.join([line_list[i], str(z[i])])
+
+    return
+
+# --------------------------------------
+# main function
+
+def main():
+    # parse the command line args
+    args = get_args()
+
+    # call primary function
+    znorm(args.data, args.column, args.abs)
+    
+    # close the file
+    args.data.close()
+
+# initialize the script
+if __name__ == '__main__':
+    sys.exit(main())
