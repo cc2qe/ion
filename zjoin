@@ -1,0 +1,246 @@
+#!/usr/bin/env python
+
+import sys
+import string
+import gzip
+from optparse import OptionParser
+
+def parse_columns(col_string):
+	# print col_string
+	col_list = []
+	c = col_string.split(',')
+	
+	for x in c:
+		x_split = x.split('-')
+		# print x_split
+		try:
+			x_split = [k - 1 for k in map(int, x_split)]
+		except ValueError:
+			sys.stderr.write('\nError: column list "%s" contains non-integer values\n\n' % col_string)
+			exit(1)
+		# print map(int, x.split('-'))
+
+		if len(x_split) == 2:
+			if x_split[1] >= x_split[0]:
+				col_list = col_list + range(x_split[0], x_split[1] + 1)
+			else:
+				# pass
+				col_list = col_list + list(reversed(range(x_split[1], x_split[0] + 1)))
+		elif len(x_split) > 2:
+			sys.stderr.write('\nError: column list "%s" contains illegal range "%s"\n\n' % (col_string, x))
+			exit(1)
+		else:
+			col_list = col_list + x_split
+		# print range(map(int, x.split('-')))
+	
+	# print col_list
+	return col_list
+
+def zjoin(aFile,
+	  bFile,
+	  aCol_list,
+	  bCol_list,
+	  write,
+	  notA,
+	  delim,
+	  allRows,
+	  emptyFill,
+	  pass_prefix,
+	  ignore_prefix,
+	  swap):
+
+	bDict = {}		
+	if bFile == "stdin":
+		bData = sys.stdin
+	elif bFile.endswith('.gz'):
+		bData = gzip.open(bFile, 'rb')
+	else:
+		bData = open(bFile, 'r')
+	for bLine in bData:
+		if pass_prefix is not None and bLine.startswith(pass_prefix) and write == 'b':
+			print bLine.strip('\n')
+			continue
+		if ignore_prefix is not None and bLine.startswith(ignore_prefix):
+			continue
+
+		b = bLine.strip('\n').split(delim)
+		fakeCols = []
+		for i in range(0,len(b)):
+		    fakeCols.append(emptyFill)
+
+		try:
+			bCol_values = delim.join([ b[bCol] for bCol in bCol_list ])
+			if bCol_values in bDict:
+				bDict[bCol_values].append(b)
+			else:
+				bDict[bCol_values] = []			
+				bDict[bCol_values].append(b)
+		except IndexError, e:
+			print >> sys.stderr, "Column " + str(bCol+1) + \
+					" does not exist in file b:"
+			print >> sys.stderr, bLine,
+			return 2
+		
+	if aFile == "stdin":
+		aData = sys.stdin
+	elif aFile.endswith('.gz'):
+		aData = gzip.open(aFile, 'rb')
+	else:
+		aData = open(aFile, 'r')
+
+	for aLine in aData:
+		if pass_prefix is not None and aLine.startswith(pass_prefix) and write != 'b':
+			print aLine.strip('\n')
+			continue
+		if ignore_prefix is not None and aLine.startswith(ignore_prefix):
+			continue
+		a = aLine.strip('\n').split(delim)	
+		try:
+			aCol_values = delim.join([ a[aCol] for aCol in aCol_list ])
+			if aCol_values in bDict:
+				if (not notA): 
+					for b in bDict[aCol_values]:
+						if write == 'a':
+							s = string.join(a, delim)
+						elif write == 'b':
+							s = string.join(b, delim)
+						elif write == 'both':
+							if swap:
+								s = string.join(b, delim) + delim + string.join(a, delim)
+							else:
+								s = string.join(a, delim) + delim + string.join(b, delim)
+						print s
+			elif allRows:
+				if write == 'a':
+					s = string.join(a, delim)
+				elif write == 'b':
+					s = string.join(fakeCols, delim)
+				elif write == 'both':
+					if swap:
+						s = string.join(fakeCols, delim) + delim +  string.join(a, delim)
+					else:
+						s = string.join(a, delim) + delim +  string.join(fakeCols, delim)
+				print s
+			else:
+			    if (notA):
+				    print string.join(a, delim) 
+
+		except IndexError, e:
+			print >> sys.stderr, "Column " + str(aCol+1) + \
+					" does not exist in file a:"
+			print >> sys.stderr, aLine,
+			return 2
+		
+class Usage(Exception):
+	def __init__(self, msg):
+		self.msg = msg		
+
+def main():
+	usage = """%prog -a <aFile>  -b <bFile>  -1 <aColumn>  -2 <bColumn>  [-d <delimiter>]
+
+zjoin version 1.1
+Authors: Aaron Quinlan and Ira Hall	
+join substitute
+	"""
+	parser = OptionParser(usage)
+	
+	parser.add_option("-a", "--aFile", dest="aFile", 
+		help="A file or standard input (-a stdin). This file is processed line by line",
+		metavar="FILE")
+	
+	parser.add_option("-b", "--bFile", dest="bFile", 
+		help="A file or standard input (-b stdin). This file is loaded into memory - use smaller file",
+		metavar="FILE")
+
+	parser.add_option("-1", "--aCol", dest="aCol", default='1', type="str",
+		help="the column(s) for the a file. comma delimited ranges allowed (e.g.: 4-6,2,1)",
+		metavar="STR")
+	
+	parser.add_option("-2", "--bCol", dest="bCol", default='1', type="str",
+		help="the column(s) for the b file. comma delimited ranges allowed (e.g.: 4-6,2,1)",
+		metavar="STR")
+
+	parser.add_option("-w", "--write", dest="write",
+		type='choice', choices=['a', 'b', 'both'],
+		default='both',
+		help="output a, b, or both; default = both",
+		metavar="STR")
+	
+	parser.add_option("-d", "--delim", dest="delim", default="\t", type="str",
+		help="the delimiter; default = tab",
+		metavar="STR")
+
+	parser.add_option("-v", "--notA", action="store_true", dest="notA",
+		help="print all rows in aFile that do not join with bFile")
+
+	parser.add_option("-V", "--notB", action="store_true", dest="notB",
+		help="print all rows in bFile that do not join with aFile")
+
+	parser.add_option("-p", "--pass", metavar='STR', dest="pass_prefix",
+		help="prefix for comment lines to print unfiltered (useful for VCF header lines beginning with '#')")
+
+	parser.add_option("-P", "--ignore", metavar='STR', dest="ignore_prefix",
+		help="prefix for comment lines in aFile or bFile to ignore")
+
+	parser.add_option("-r", "--allRows", action="store_true", dest="allRows",
+                help="print all rows in aFile; if match, add B cols; if not, add NA (or text specified by -e)")
+
+	parser.add_option("-e", "--emptyFill", dest="emptyFill", default="NA", type="str",
+		help="what to fill empty columns with when -r is used; default = NA",
+		metavar="STR")
+
+	parser.add_option("-s", "--swap", dest="swap", action='store_true',
+		help="swap the output column order (b, a)")
+
+	(opts, args) = parser.parse_args()
+
+	if opts.aFile is None:
+		parser.print_help()
+		print
+	else:
+		# if notB, then simply switch the A and B files and then do notA
+		if opts.notB:
+			notA = True
+			aFile = opts.bFile
+			bFile = opts.aFile
+
+			aCol = opts.bCol
+			bCol = opts.aCol
+		else:
+			notA = opts.notA
+			aFile = opts.aFile
+			bFile = opts.bFile
+			
+			aCol = opts.aCol
+			bCol = opts.bCol
+
+		# parse the column list and ranges
+		aCol_list = parse_columns(aCol)
+		bCol_list = parse_columns(bCol)
+		if len(aCol_list) != len(bCol_list):
+			sys.stderr.write("\nError: aCol and bCol differ in length\n\n")
+			exit(1)
+
+		try:
+			zjoin(aFile,
+			      bFile,
+			      aCol_list,
+			      bCol_list,
+			      opts.write,
+			      notA,
+			      opts.delim,
+			      opts.allRows,
+			      opts.emptyFill,
+			      opts.pass_prefix,
+			      opts.ignore_prefix,
+			      opts.swap)
+		except IOError as err:
+			sys.stderr.write("IOError " + str(err) + "\n");
+			return
+
+if __name__ == "__main__":
+	try:
+		main()
+        except IOError, e:
+		if e.errno != 32:  # ignore SIGPIPE
+			raise 
