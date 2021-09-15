@@ -46,14 +46,14 @@ def random_lines(num_lines_wanted, num_lines, f):
 
     for current_line_num in xrange(num_lines):
         if current_line_num in lines_to_get:
-            print f.readline().rstrip()
+            print(f.readline().rstrip())
         else:
             f.readline()
 
 def random_freq(freq, f):
     for line in f:
         if random.random() < freq:
-            print line.rstrip()
+            print(line.rstrip())
 
 # --------------------------------------
 # main function
@@ -83,7 +83,7 @@ def main():
 if __name__ == '__main__':
     try:
         sys.exit(main())
-    except IOError, e:
+    except IOError as e:
         if e.errno != 32:  # ignore SIGPIPE
             raise
 
