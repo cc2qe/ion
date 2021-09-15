@@ -42,9 +42,9 @@ def random_lines(num_lines_wanted, num_lines, f):
         # Go back to the top of the file
         f.seek(0)
 
-    lines_to_get = set(random.sample(xrange(num_lines), num_lines_wanted))
+    lines_to_get = set(random.sample(range(num_lines), num_lines_wanted))
 
-    for current_line_num in xrange(num_lines):
+    for current_line_num in range(num_lines):
         if current_line_num in lines_to_get:
             print(f.readline().rstrip())
         else:
