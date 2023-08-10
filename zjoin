@@ -1,24 +1,23 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python3
 
 import sys
-import string
 import gzip
 from optparse import OptionParser
 
 def parse_columns(col_string):
-	# print col_string
+	# print(col_string)
 	col_list = []
 	c = col_string.split(',')
 	
 	for x in c:
 		x_split = x.split('-')
-		# print x_split
+		# print(x_split)
 		try:
 			x_split = [k - 1 for k in map(int, x_split)]
 		except ValueError:
 			sys.stderr.write('\nError: column list "%s" contains non-integer values\n\n' % col_string)
 			exit(1)
-		# print map(int, x.split('-'))
+		# print(map(int, x.split('-')))
 
 		if len(x_split) == 2:
 			if x_split[1] >= x_split[0]:
@@ -31,7 +30,7 @@ def parse_columns(col_string):
 			exit(1)
 		else:
 			col_list = col_list + x_split
-		# print range(map(int, x.split('-')))
+		# print(range(map(int, x.split('-'))))
 	
 	# print col_list
 	return col_list
@@ -58,7 +57,7 @@ def zjoin(aFile,
 		bData = open(bFile, 'r')
 	for bLine in bData:
 		if pass_prefix is not None and bLine.startswith(pass_prefix) and write == 'b':
-			print bLine.strip('\n')
+			print(bLine.strip('\n'))
 			continue
 		if ignore_prefix is not None and bLine.startswith(ignore_prefix):
 			continue
@@ -75,7 +74,7 @@ def zjoin(aFile,
 			else:
 				bDict[bCol_values] = []			
 				bDict[bCol_values].append(b)
-		except IndexError, e:
+		except IndexError as e:
 			print >> sys.stderr, "Column " + str(bCol+1) + \
 					" does not exist in file b:"
 			print >> sys.stderr, bLine,
@@ -90,7 +89,7 @@ def zjoin(aFile,
 
 	for aLine in aData:
 		if pass_prefix is not None and aLine.startswith(pass_prefix) and write != 'b':
-			print aLine.strip('\n')
+			print(aLine.strip('\n'))
 			continue
 		if ignore_prefix is not None and aLine.startswith(ignore_prefix):
 			continue
@@ -101,31 +100,31 @@ def zjoin(aFile,
 				if (not notA): 
 					for b in bDict[aCol_values]:
 						if write == 'a':
-							s = string.join(a, delim)
+							s = str.join(delim, a)
 						elif write == 'b':
-							s = string.join(b, delim)
+							s = str.join(delim, b)
 						elif write == 'both':
 							if swap:
-								s = string.join(b, delim) + delim + string.join(a, delim)
+								s = str.join(delim, b) + delim + str.join(delim, a)
 							else:
-								s = string.join(a, delim) + delim + string.join(b, delim)
-						print s
+								s = str.join(delim, a) + delim + str.join(delim, b)
+						print(s)
 			elif allRows:
 				if write == 'a':
-					s = string.join(a, delim)
+					s = str.join(delim, a)
 				elif write == 'b':
-					s = string.join(fakeCols, delim)
+					s = str.join(delim, fakeCols)
 				elif write == 'both':
 					if swap:
-						s = string.join(fakeCols, delim) + delim +  string.join(a, delim)
+						s = str.join(delim, fakeCols) + delim +  str.join(delim, a)
 					else:
-						s = string.join(a, delim) + delim +  string.join(fakeCols, delim)
-				print s
+						s = str.join(delim, a) + delim +  str.join(delim, fakeCols)
+				print(s)
 			else:
 			    if (notA):
-				    print string.join(a, delim) 
+				    print(str.join(delim, a))
 
-		except IndexError, e:
+		except IndexError as e:
 			print >> sys.stderr, "Column " + str(aCol+1) + \
 					" does not exist in file a:"
 			print >> sys.stderr, aLine,
@@ -196,7 +195,7 @@ join substitute
 
 	if opts.aFile is None:
 		parser.print_help()
-		print
+		print()
 	else:
 		# if notB, then simply switch the A and B files and then do notA
 		if opts.notB:
@@ -239,8 +238,8 @@ join substitute
 			return
 
 if __name__ == "__main__":
-	try:
-		main()
-        except IOError, e:
-		if e.errno != 32:  # ignore SIGPIPE
-			raise 
+        try:
+	        main()
+        except IOError as e:
+                if e.errno != 32:  # ignore SIGPIPE
+                        raise
