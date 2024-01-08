@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python
 
 import argparse, sys
 from argparse import RawTextHelpFormatter
@@ -234,25 +234,25 @@ def calcStats(data, absolute, pTile):
     
     # print the formatted output.
     med = median(valueCounts)
-    print 'num lines:\t%s' % countRecords(valueCounts)
-    print 'num unique:\t%s' % len(valueCounts)
-    print 'sum:\t\t%s' % sumRecords(valueCounts)
-    print 'arith. mean:\t%s' % mean(valueCounts)
-    print 'geo. mean:\t%s' % geoMean(valueCounts)
-    print 'min:\t\t%s' % minimum(valueCounts)
-    print 'Q1:\t\t%s' % percentile(valueCounts, 25)
-    print 'median:\t\t%s' % med
-    print 'Q3:\t\t%s' % percentile(valueCounts, 75)
-    print 'max:\t\t%s' % maximum(valueCounts)
+    print('num lines:\t%s' % countRecords(valueCounts))
+    print('num unique:\t%s' % len(valueCounts))
+    print('sum:\t\t%s' % sumRecords(valueCounts))
+    print('arith. mean:\t%s' % mean(valueCounts))
+    print('geo. mean:\t%s' % geoMean(valueCounts))
+    print('min:\t\t%s' % minimum(valueCounts))
+    print('Q1:\t\t%s' % percentile(valueCounts, 25))
+    print('median:\t\t%s' % med)
+    print('Q3:\t\t%s' % percentile(valueCounts, 75))
+    print('max:\t\t%s' % maximum(valueCounts))
     if pTile:
         for myPtile in pTile.split(','):
             pfloat = float(myPtile)
-            print '%s %%tile:\t%s' % (myPtile, percentile(valueCounts, pfloat))
-    print 'mode:\t\t%s (N=%s)' % mode(valueCounts)
-    print 'anti-mode:\t%s (N=%s)' % antimode(valueCounts)
-    print 'stdev:\t\t%s' % stdev(valueCounts)
-    print 'variance:\t%s' % variance(valueCounts)
-    print 'mad:\t\t%s' % mad(valueCounts, med)
+            print('%s %%tile:\t%s' % (myPtile, percentile(valueCounts, pfloat)))
+    print('mode:\t\t%s (N=%s)' % mode(valueCounts))
+    print('anti-mode:\t%s (N=%s)' % antimode(valueCounts))
+    print('stdev:\t\t%s' % stdev(valueCounts))
+    print('variance:\t%s' % variance(valueCounts))
+    print('mad:\t\t%s' % mad(valueCounts, med))
 
     return
 
