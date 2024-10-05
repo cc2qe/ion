@@ -4,7 +4,11 @@ import argparse
 import random
 import sys
 
-def reservoir_sample_lines(input_stream, N):
+def reservoir_sample_lines(input_stream, N, seed=None):
+    # Set the random seed if provided
+    if seed is not None:
+        random.seed(seed)
+
     reservoir = []
     
     # Read from the input stream line by line
@@ -25,10 +29,15 @@ def main():
     parser.add_argument('input_file', nargs='?', type=argparse.FileType('r'), default=sys.stdin, 
                         help="Input file (or stdin if not provided).")
     parser.add_argument('-n', '--num', type=int, required=True, help="Number of lines to select.")
+    parser.add_argument('-s', '--seed', type=int, help="Random seed for reproducibility.", required=False)
     
     args = parser.parse_args()
     
-    reservoir_sample_lines(args.input_file, args.num)
+    # Call the reservoir sampling function
+    reservoir_sample_lines(args.input_file, args.num, seed=args.seed)
 
 if __name__ == "__main__":
     main()
+
+
+
