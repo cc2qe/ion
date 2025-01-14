@@ -64,8 +64,8 @@ def znorm(data, column, absolute):
 
     z = stats.zscore(valueList)
 
-    for i in xrange(len(z)):
-        print '\t'.join([line_list[i], str(z[i])])
+    for i in range(len(z)):
+        print('\t'.join([line_list[i], str(z[i])]))
 
     return
 
