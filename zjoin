@@ -51,8 +51,8 @@ def zjoin(aFile,
 	bDict = {}		
 	if bFile == "stdin":
 		bData = sys.stdin
-	elif bFile.endswith('.gz'):
-		bData = gzip.open(bFile, 'rb')
+	elif bFile.endswith('.gz') or bFile.endswith('.bgz'):
+		bData = gzip.open(bFile, 'rt')
 	else:
 		bData = open(bFile, 'r')
 	for bLine in bData:
@@ -82,8 +82,8 @@ def zjoin(aFile,
 		
 	if aFile == "stdin":
 		aData = sys.stdin
-	elif aFile.endswith('.gz'):
-		aData = gzip.open(aFile, 'rb')
+	elif aFile.endswith('.gz') or aFile.endswith('.bgz'):
+		aData = gzip.open(aFile, 'rt')
 	else:
 		aData = open(aFile, 'r')
 
