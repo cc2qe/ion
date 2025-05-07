@@ -1,0 +1,85 @@
+#!/usr/bin/env python
+
+import argparse, sys
+from argparse import RawTextHelpFormatter
+from scipy import stats
+import numpy as np
+
+__author__ = "Colby Chiang (colbychiang@wustl.edu)"
+__version__ = "0.0.2-inverse-rank"
+__date__ = "$Date: 2025-05-07 $"
+
+# --------------------------------------
+# define functions
+
+def get_args():
+    parser = argparse.ArgumentParser(formatter_class=RawTextHelpFormatter, description="\
+irnt " + __version__ + "\n\
+author: " + __author__ + "\n\
+description: convert a column of numbers to inverse rank-normalized scores")
+    parser.add_argument('-a', '--abs', action='store_true', help='take absolute values of input before calculating ranks')
+    parser.add_argument('-c', '--column', type=int, required=False, default=1, help='column to operate on [1]')
+    parser.add_argument('--header', action='store_true', help='input has a header line')
+    parser.add_argument('data', nargs='?', type=argparse.FileType('r'), default=None, help='input column of numbers. (default: stdin)')
+
+    args = parser.parse_args()
+
+    if args.data == None:
+        if sys.stdin.isatty():
+            parser.print_help()
+            exit(1)
+        else:
+            args.data = sys.stdin
+    return args
+
+def irnt(data, column, absolute, header):
+    valueList = []
+    line_list = []
+
+    if header:
+        header_line = data.readline().rstrip()
+        v = header_line.split('\t')
+        print(header_line.strip() + '\t' + v[column-1] + '_irnt')
+
+    for line in data:
+        l = line.rstrip()
+        if l == "":
+            continue
+        line_list.append(l)
+
+        v = l.split('\t')
+        try:
+            lineVal = float(v[column-1])
+        except ValueError:
+            sys.stderr.write("\nError: non-numeric input\n%s\n\n" % line.strip())
+            exit(1)
+        
+        if absolute:
+            lineVal = abs(lineVal)
+        
+        valueList.append(lineVal)
+
+    value_array = np.array(valueList)
+    n = len(value_array)
+
+    # Rank the data (1-based)
+    ranks = stats.rankdata(value_array, method='average')  # average rank for ties
+    # Inverse normal transformation
+    irnt_values = stats.norm.ppf((ranks - 0.5) / n)
+
+    for i in range(n):
+        print('\t'.join([line_list[i], str(irnt_values[i])]))
+
+    return
+
+# --------------------------------------
+# main function
+
+def main():
+    args = get_args()
+    irnt(args.data, args.column, args.abs, args.header)
+    args.data.close()
+
+# initialize the script
+if __name__ == '__main__':
+    sys.exit(main())
