@@ -20,6 +20,7 @@ author: " + __author__ + "\n\
 description: convert a column of numbers to z-scores")
     parser.add_argument('-a', '--abs', action='store_true', help='take absolute values of input before calculating stats')
     parser.add_argument('-c', '--column', type=int, required=False, default=1, help='column to operate on [1]')
+    parser.add_argument('--header', action='store_true', help='input has a header line')
     parser.add_argument('data', nargs='?', type=argparse.FileType('r'), default=None, help='input column of numbers. (default: stdin)')
 
     # parse the arguments
@@ -35,9 +36,15 @@ description: convert a column of numbers to z-scores")
     return args
 
 # primary function
-def znorm(data, column, absolute):
+def znorm(data, column, absolute, header):
     valueList = []
     line_list = []
+
+    # if header, skip the first line
+    if header:
+        header_line = data.readline().rstrip()
+        v = header_line.split('\t')
+        print(header_line.strip() + '\t' + v[column-1] + '_zscore')
 
     for line in data:
         l = line.rstrip()
@@ -77,7 +84,7 @@ def main():
     args = get_args()
 
     # call primary function
-    znorm(args.data, args.column, args.abs)
+    znorm(args.data, args.column, args.abs, args.header)
     
     # close the file
     args.data.close()
