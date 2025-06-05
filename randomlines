@@ -7,83 +7,79 @@ def get_args():
     parser.add_argument('-l', '--lines', type=int, required=False, default=None, help='Number of lines to sample from the file.')
     parser.add_argument('-f', '--freq', type=float, required=False, default=None, help='Frequency with which to output a line.')
     parser.add_argument('-n', '--input_file_length', type=int, required=False, default=None, help='Number of lines in the input file. Improves speed and allows stdin (optional).')
+    parser.add_argument('--header', action='store_true', required=False, default=False, help='If set, the first line of the input file is treated as a header and not sampled.')
     parser.add_argument('-s', '--seed', type=int, required=False, help='Seed for random number generator. Useful for debugging')
     parser.add_argument('input', nargs='?', type=argparse.FileType('r'), default=None, help='Input file. (\'-\' for stdin, but -n is required for stdin)')
 
     args = parser.parse_args()
 
     # either --lines or --freq is required
-    if (args.lines==None and args.freq==None) or (args.lines and args.freq):
+    if (args.lines is None and args.freq is None) or (args.lines and args.freq):
         parser.error('Requires either --lines or --freq but not both')
 
     # if no input, check if part of pipe and if so, read stdin.
-    if args.input == None or args.input.name == '<stdin>':
+    if args.input is None or args.input.name == '<stdin>':
         if sys.stdin.isatty():
             parser.print_help()
             exit(1)
         else:
             # if stdin require -n input_file_length variable
-            if args.input_file_length==None and args.freq==None:
+            if args.input_file_length is None and args.freq is None:
                 parser.error(message='argument -n/--input_file_length is required when reading from stdin')
             args.input = sys.stdin
 
-    # send back the user input
     return args
 
-def random_lines(num_lines_wanted, num_lines, f):
-
-    # if input length not user specified, count lines in file
-    if num_lines == None:
+def random_lines(num_lines_wanted, num_lines, f, has_header=False):
+    if num_lines is None:
         num_lines = 0
-
-        for line in f:
+        for _ in f:
             num_lines += 1
-
-        # Go back to the top of the file
         f.seek(0)
+        if has_header:
+            next(f)  # skip header for counting lines
 
-    lines_to_get = set(random.sample(range(num_lines), num_lines_wanted))
+    data_lines = num_lines - 1 if has_header else num_lines
+    lines_to_get = set(random.sample(range(data_lines), num_lines_wanted))
 
-    for current_line_num in range(num_lines):
+    current_line_num = 0
+    for i, line in enumerate(f):
+        if has_header and i == 0:
+            continue  # header already printed
         if current_line_num in lines_to_get:
-            print(f.readline().rstrip())
-        else:
-            f.readline()
+            print(line.rstrip())
+        current_line_num += 1
 
-def random_freq(freq, f):
-    for line in f:
+def random_freq(freq, f, has_header=False):
+    for i, line in enumerate(f):
+        if has_header and i == 0:
+            print(line.rstrip())
+            continue
         if random.random() < freq:
             print(line.rstrip())
 
-# --------------------------------------
-# main function
-
 def main():
-    # parse the command line args
     args = get_args()
 
-    # Seed randomness
-    if args.seed != None:
+    # Seed the RNG
+    if args.seed is not None:
         random.seed(args.seed)
     else:
         random.seed()
 
     if args.lines:
-        # call absolute lines function
-        random_lines(args.lines, args.input_file_length, args.input)
-
+        if args.header:
+            header_line = args.input.readline()
+            print(header_line.rstrip())
+        random_lines(args.lines, args.input_file_length, args.input, has_header=args.header)
     elif args.freq:
-        # call frequency function
-        random_freq(args.freq, args.input)
+        random_freq(args.freq, args.input, has_header=args.header)
 
-    # close the input file
     args.input.close()
 
-# initialize the script
 if __name__ == '__main__':
     try:
         sys.exit(main())
     except IOError as e:
         if e.errno != 32:  # ignore SIGPIPE
             raise
-
